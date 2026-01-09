@@ -311,6 +311,7 @@ export default {
       const maxUploadSize = parseInt(env.MAX_UPLOAD_SIZE || '5368709120', 10);
       // 检查 Content-Length
       const contentLengthHeader = request.headers.get('content-length');
+      let parsedContentLength = null;
       if (contentLengthHeader) {
         const contentLength = parseInt(contentLengthHeader, 10);
         if (!isNaN(contentLength) && contentLength > maxUploadSize) {
@@ -319,12 +320,16 @@ export default {
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
           });
         }
+        if (!isNaN(contentLength) && contentLength >= 0) {
+          parsedContentLength = contentLength;
+        }
       }
 
       // 获取有效期参数（秒）
       const expirationSeconds = request.headers.get('X-Expiration-Seconds');
       const hasExpiration = expirationSeconds && !isNaN(parseInt(expirationSeconds, 10)) && parseInt(expirationSeconds, 10) > 0;
       const expirationTime = hasExpiration ? parseInt(expirationSeconds, 10) : null;
+      const isOneTime = !hasExpiration;
 
       // 生成随机文件名
       const randomId = generateRandomId();
@@ -346,7 +351,7 @@ export default {
       // 使用流式上传 - 直接传递 request.body 到 R2
       // 这样不会将整个文件加载到 Worker 内存中
       const customMetadata = {
-        oneTime: hasExpiration ? 'false' : 'true',
+        oneTime: isOneTime ? 'true' : 'false',
         uploadTime: new Date().toISOString()
       };
 
@@ -362,6 +367,24 @@ export default {
         },
         customMetadata: customMetadata,
       });
+
+      const uploadedSize =
+        uploadResult && typeof uploadResult.size === 'number'
+          ? uploadResult.size
+          : typeof parsedContentLength === 'number'
+            ? parsedContentLength
+            : null;
+      const sizeLabel =
+        typeof uploadedSize === 'number' ? formatBytes(uploadedSize) : 'unknown';
+      const xForwardedFor = request.headers.get('X-Forwarded-For');
+      const forwardedIP = xForwardedFor ? xForwardedFor.split(',')[0].trim() : '';
+      const clientIP =
+        request.headers.get('CF-Connecting-IP') ||
+        request.headers.get('X-Real-IP') ||
+        forwardedIP ||
+        'unknown';
+
+      console.log(`[Upload] key=${fileName} size=${sizeLabel} ip=${clientIP} oneTime=${isOneTime}`);
 
       // 返回上传成功的 URL
       const url = new URL(request.url);
@@ -418,7 +441,7 @@ export default {
         status: 200,
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
-          'X-One-Time-Upload': hasExpiration ? 'false' : 'true',
+          'X-One-Time-Upload': isOneTime ? 'true' : 'false',
         },
       });
     } catch (e) {

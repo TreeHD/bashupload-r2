@@ -10,6 +10,7 @@ import (
 	"log"
 	"math/rand"
 	"mime"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -334,6 +335,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request, forceShortURL bool) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	defer r.Body.Close()
 
 	// 检查文件大小
 	contentLength := r.ContentLength
@@ -402,10 +404,13 @@ func handleUpload(w http.ResponseWriter, r *http.Request, forceShortURL bool) {
 	}
 
 	// 上传到 R2 (使用流式上传，不需要将整个文件加载到内存)
+	counter := &byteCounter{}
+	bodyReader := io.TeeReader(r.Body, counter)
+
 	uploadInput := &s3manager.UploadInput{
 		Bucket:      aws.String(bucketName),
 		Key:         aws.String(fileName),
-		Body:        r.Body,
+		Body:        bodyReader,
 		ContentType: aws.String(contentType),
 		Metadata:    metadata,
 	}
@@ -416,6 +421,13 @@ func handleUpload(w http.ResponseWriter, r *http.Request, forceShortURL bool) {
 		http.Error(w, fmt.Sprintf("Upload failed: %v", err), http.StatusInternalServerError)
 		return
 	}
+
+	uploadedBytes := counter.Total()
+	if uploadedBytes == 0 && contentLength > 0 {
+		uploadedBytes = contentLength
+	}
+	clientIP := getClientIP(r)
+	log.Printf("[Upload] key=%s size=%s ip=%s oneTime=%t", fileName, formatBytes(uploadedBytes), clientIP, !hasExpiration)
 
 	// 生成文件 URL
 	scheme := "http"
@@ -666,4 +678,38 @@ func determineExtension(contentType string) string {
 	}
 
 	return ""
+}
+
+type byteCounter struct {
+	total int64
+}
+
+func (c *byteCounter) Write(p []byte) (int, error) {
+	c.total += int64(len(p))
+	return len(p), nil
+}
+
+func (c *byteCounter) Total() int64 {
+	return c.total
+}
+
+func getClientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		parts := strings.Split(xff, ",")
+		if len(parts) > 0 {
+			if ip := strings.TrimSpace(parts[0]); ip != "" {
+				return ip
+			}
+		}
+	}
+
+	if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
+		return realIP
+	}
+
+	if ip, _, err := net.SplitHostPort(r.RemoteAddr); err == nil && ip != "" {
+		return ip
+	}
+
+	return r.RemoteAddr
 }
