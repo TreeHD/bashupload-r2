@@ -958,7 +958,7 @@ function uploadWithProgress(file, onProgress) {
         
         // Check if short URL option is selected
         const useShortUrl = document.getElementById('useShortUrl')?.checked;
-        const uploadPath = useShortUrl ? `${UPLOAD_URL}/short` : `${UPLOAD_URL}/${file.name}`;
+        const uploadPath = useShortUrl ? `${UPLOAD_URL}/short/${file.name}` : `${UPLOAD_URL}/${file.name}`;
         
         // Check if password protection is enabled
         const usePassword = document.getElementById('usePassword')?.checked;

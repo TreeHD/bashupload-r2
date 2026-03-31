@@ -331,22 +331,34 @@ export default {
       const expirationTime = hasExpiration ? parseInt(expirationSeconds, 10) : null;
       const isOneTime = !hasExpiration;
 
-      // 生成随机文件名
-      const randomId = generateRandomId();
-      let contentType = request.headers.get('content-type') || 'application/octet-stream';
-      let extension = '';
-
-      // 如果是 POST 请求（curl -d），强制使用 .txt 扩展名和 text/plain content-type
-      if (request.method === 'POST') {
-        contentType = 'text/plain; charset=utf-8';
-        extension = '.txt';
-      } else {
-        // PUT 请求：使用 mime.js 根据 Content-Type 获取扩展名
-        const ext = mime.getExtension(contentType);
-        extension = ext ? `.${ext}` : '';
+      // 提取原始文件名
+      let originalName = "";
+      if (pathname.startsWith('/short/')) {
+        originalName = decodeURIComponent(pathname.substring(7));
+      } else if (pathname !== '/' && pathname !== '/short' && pathname !== '/short/') {
+        originalName = decodeURIComponent(pathname.substring(1));
       }
 
-      const fileName = `${randomId}${extension}`;
+      // 生成随机 ID（作为前缀或独立文件名）
+      const randomId = generateRandomId();
+      let contentType = request.headers.get('content-type') || 'application/octet-stream';
+      
+      let fileName;
+      if (originalName) {
+        // 如果有原始文件名，存储为 randomId/originalName
+        fileName = `${randomId}/${originalName}`;
+      } else {
+        // 如果没有原始文件名（如 POST / 或 PUT /），尝试从 Content-Type 或请求方法推断
+        let extension = '';
+        if (request.method === 'POST') {
+          contentType = 'text/plain; charset=utf-8';
+          extension = '.txt';
+        } else {
+          const ext = mime.getExtension(contentType);
+          extension = ext ? `.${ext}` : '';
+        }
+        fileName = `${randomId}${extension}`;
+      }
 
       // 使用流式上传 - 直接传递 request.body 到 R2
       // 这样不会将整个文件加载到 Worker 内存中
