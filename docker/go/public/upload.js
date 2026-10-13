@@ -4,6 +4,25 @@ let currentLang = 'en';
 let serverConfig = null;
 let currentUploadMode = 'file'; // 'file' or 'text'
 
+// English / Simplified Chinese / Traditional Chinese (Taiwan)
+function localized(en, zh, zhTW) {
+    return currentLang === 'zh-TW' ? zhTW : currentLang === 'zh' ? zh : en;
+}
+
+function getLocalizedText(element) {
+    return element.getAttribute('data-' + currentLang) || element.getAttribute('data-en') || '';
+}
+
+function formatExpiration(value, unit) {
+    const units = {
+        seconds: ['seconds', '秒', '秒'], minutes: ['minutes', '分钟', '分鐘'],
+        hours: ['hours', '小时', '小時'], days: ['days', '天', '天']
+    };
+    const forms = units[unit] || [unit, unit, unit];
+    return currentLang === 'en' ? `${value} ${forms[0]}`
+        : `${value}${localized(forms[0], forms[1], forms[2])}`;
+}
+
 // 格式化字节数为可读字符串
 function formatBytes(bytes) {
     if (bytes === 0) return '0B';
@@ -36,6 +55,7 @@ function updateMaxExpirationDisplay() {
     let value = maxExpirationSeconds;
     let unit = 'seconds';
     let unitZh = '秒';
+    let unitZhTW = '秒';
     
     if (maxExpirationSeconds % 86400 === 0) {
         value = maxExpirationSeconds / 86400;
@@ -45,10 +65,12 @@ function updateMaxExpirationDisplay() {
         value = maxExpirationSeconds / 3600;
         unit = 'hours';
         unitZh = '小时';
+        unitZhTW = '小時';
     } else if (maxExpirationSeconds % 60 === 0) {
         value = maxExpirationSeconds / 60;
         unit = 'minutes';
         unitZh = '分钟';
+        unitZhTW = '分鐘';
     }
     
     const maxExpirationInfo = document.getElementById('maxExpirationInfo');
@@ -57,10 +79,12 @@ function updateMaxExpirationDisplay() {
         if (langText) {
             const maxTextEn = `💡 Maximum allowed: ${value} ${unit}`;
             const maxTextZh = `💡 最大允许值: ${value}${unitZh}`;
+            const maxTextTw = `💡 允許的最長期限：${value}${unitZhTW}`;
             
             langText.setAttribute('data-en', maxTextEn);
             langText.setAttribute('data-zh', maxTextZh);
-            langText.textContent = currentLang === 'zh' ? maxTextZh : maxTextEn;
+            langText.setAttribute('data-zh-tw', maxTextTw);
+            langText.textContent = localized(maxTextEn, maxTextZh, maxTextTw);
         }
     }
 }
@@ -79,10 +103,12 @@ function updateMaxFileSizeDisplay() {
         if (langText) {
             const maxTextEn = `Max: ${maxSizeText}`;
             const maxTextZh = `最大: ${maxSizeText}`;
+            const maxTextTw = `最大：${maxSizeText}`;
             
             langText.setAttribute('data-en', maxTextEn);
             langText.setAttribute('data-zh', maxTextZh);
-            langText.textContent = currentLang === 'zh' ? maxTextZh : maxTextEn;
+            langText.setAttribute('data-zh-tw', maxTextTw);
+            langText.textContent = localized(maxTextEn, maxTextZh, maxTextTw);
         }
     }
     
@@ -91,10 +117,12 @@ function updateMaxFileSizeDisplay() {
     if (maxFileSizeFeature) {
         const featureTextEn = `Supports files up to ${maxSizeText} in size`;
         const featureTextZh = `支持最大 ${maxSizeText} 的文件`;
+        const featureTextTw = `支援最大 ${maxSizeText} 的檔案`;
         
         maxFileSizeFeature.setAttribute('data-en', featureTextEn);
         maxFileSizeFeature.setAttribute('data-zh', featureTextZh);
-        maxFileSizeFeature.textContent = currentLang === 'zh' ? featureTextZh : featureTextEn;
+        maxFileSizeFeature.setAttribute('data-zh-tw', featureTextTw);
+        maxFileSizeFeature.textContent = localized(featureTextEn, featureTextZh, featureTextTw);
     }
 }
 
@@ -121,6 +149,9 @@ function applyPasswordRequirement() {
         if (!passwordNoticeText.dataset.zhDefault) {
             passwordNoticeText.dataset.zhDefault = passwordNoticeText.getAttribute('data-zh') || '';
         }
+        if (!passwordNoticeText.dataset.zhTwDefault) {
+            passwordNoticeText.dataset.zhTwDefault = passwordNoticeText.getAttribute('data-zh-tw') || '';
+        }
     }
     if (passwordLabelTexts && passwordLabelTexts.length > 0) {
         const labelMainText = passwordLabelTexts[0];
@@ -130,6 +161,9 @@ function applyPasswordRequirement() {
         if (labelMainText && !labelMainText.dataset.zhDefault) {
             labelMainText.dataset.zhDefault = labelMainText.getAttribute('data-zh') || '';
         }
+        if (labelMainText && !labelMainText.dataset.zhTwDefault) {
+            labelMainText.dataset.zhTwDefault = labelMainText.getAttribute('data-zh-tw') || '';
+        }
         if (passwordLabelTexts.length > 1) {
             const tooltipText = passwordLabelTexts[1];
             if (tooltipText && !tooltipText.dataset.enDefault) {
@@ -137,6 +171,9 @@ function applyPasswordRequirement() {
             }
             if (tooltipText && !tooltipText.dataset.zhDefault) {
                 tooltipText.dataset.zhDefault = tooltipText.getAttribute('data-zh') || '';
+            }
+            if (tooltipText && !tooltipText.dataset.zhTwDefault) {
+                tooltipText.dataset.zhTwDefault = tooltipText.getAttribute('data-zh-tw') || '';
             }
         }
     }
@@ -154,26 +191,23 @@ function applyPasswordRequirement() {
         if (passwordNoticeText) {
             passwordNoticeText.setAttribute('data-en', '⚠️ Password required: The server enforces uploads to include the configured password');
             passwordNoticeText.setAttribute('data-zh', '⚠️ 必须输入密码：服务器要求上传时提供配置的密码');
-            passwordNoticeText.textContent = currentLang === 'zh'
-                ? passwordNoticeText.getAttribute('data-zh')
-                : passwordNoticeText.getAttribute('data-en');
+            passwordNoticeText.setAttribute('data-zh-tw', '⚠️ 必須輸入密碼：伺服器要求上傳時提供設定的密碼');
+            passwordNoticeText.textContent = getLocalizedText(passwordNoticeText);
         }
 
         if (passwordLabelTexts && passwordLabelTexts.length > 0) {
             const labelMainText = passwordLabelTexts[0];
             labelMainText.setAttribute('data-en', 'Server password required');
             labelMainText.setAttribute('data-zh', '服务器要求必须输入密码');
-            labelMainText.textContent = currentLang === 'zh'
-                ? labelMainText.getAttribute('data-zh')
-                : labelMainText.getAttribute('data-en');
+            labelMainText.setAttribute('data-zh-tw', '伺服器要求輸入密碼');
+            labelMainText.textContent = getLocalizedText(labelMainText);
 
             if (passwordLabelTexts.length > 1) {
                 const tooltipText = passwordLabelTexts[1];
                 tooltipText.setAttribute('data-en', 'Every upload must include the configured server password');
                 tooltipText.setAttribute('data-zh', '每次上传都必须填写服务器配置的密码');
-                tooltipText.textContent = currentLang === 'zh'
-                    ? tooltipText.getAttribute('data-zh')
-                    : tooltipText.getAttribute('data-en');
+            tooltipText.setAttribute('data-zh-tw', '每次上傳都必須填寫伺服器設定的密碼');
+                tooltipText.textContent = getLocalizedText(tooltipText);
             }
         }
     } else {
@@ -185,28 +219,32 @@ function applyPasswordRequirement() {
         if (passwordNoticeText) {
             const enDefault = passwordNoticeText.dataset.enDefault || passwordNoticeText.getAttribute('data-en') || '';
             const zhDefault = passwordNoticeText.dataset.zhDefault || passwordNoticeText.getAttribute('data-zh') || '';
+            const twDefault = passwordNoticeText.dataset.zhTwDefault || passwordNoticeText.getAttribute('data-zh-tw') || '';
             passwordNoticeText.setAttribute('data-en', enDefault);
             passwordNoticeText.setAttribute('data-zh', zhDefault);
-            passwordNoticeText.textContent = currentLang === 'zh' ? zhDefault : enDefault;
+            passwordNoticeText.setAttribute('data-zh-tw', twDefault);
+            passwordNoticeText.textContent = localized(enDefault, zhDefault, twDefault);
         }
 
         if (passwordLabelTexts && passwordLabelTexts.length > 0) {
             const labelMainText = passwordLabelTexts[0];
             const enDefault = labelMainText.dataset.enDefault || labelMainText.getAttribute('data-en') || '';
             const zhDefault = labelMainText.dataset.zhDefault || labelMainText.getAttribute('data-zh') || '';
+            const twDefault = labelMainText.dataset.zhTwDefault || labelMainText.getAttribute('data-zh-tw') || '';
             labelMainText.setAttribute('data-en', enDefault);
             labelMainText.setAttribute('data-zh', zhDefault);
-            labelMainText.textContent = currentLang === 'zh' ? zhDefault : enDefault;
+            labelMainText.setAttribute('data-zh-tw', twDefault);
+            labelMainText.textContent = localized(enDefault, zhDefault, twDefault);
 
             if (passwordLabelTexts.length > 1) {
                 const tooltipText = passwordLabelTexts[1];
                 const tooltipEnDefault = tooltipText.dataset.enDefault || tooltipText.getAttribute('data-en') || '';
                 const tooltipZhDefault = tooltipText.dataset.zhDefault || tooltipText.getAttribute('data-zh') || '';
+            const tooltipTwDefault = tooltipText.dataset.zhTwDefault || tooltipText.getAttribute('data-zh-tw') || '';
                 tooltipText.setAttribute('data-en', tooltipEnDefault);
                 tooltipText.setAttribute('data-zh', tooltipZhDefault);
-                tooltipText.textContent = currentLang === 'zh'
-                    ? tooltipZhDefault
-                    : tooltipEnDefault;
+            tooltipText.setAttribute('data-zh-tw', tooltipTwDefault);
+                tooltipText.textContent = localized(tooltipEnDefault, tooltipZhDefault, tooltipTwDefault);
             }
         }
 
@@ -227,16 +265,21 @@ function applyPasswordRequirement() {
 
 // Language detection and switching
 function detectLanguage() {
-    const browserLang = navigator.language || navigator.userLanguage;
-    // Check if browser language is Chinese
-    if (browserLang.toLowerCase().includes('zh')) {
-        return 'zh';
-    }
-    return 'en';
+    const stored = localStorage.getItem('bashupload-language');
+    if (['en', 'zh', 'zh-TW'].includes(stored)) return stored;
+    const browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+    if (/^zh[-_](tw|hk|mo|hant)(?:$|[-_])/.test(browserLang)) return 'zh-TW';
+    return browserLang.startsWith('zh') ? 'zh' : 'en';
 }
 
 function switchLanguage(lang) {
+    if (!['en', 'zh', 'zh-TW'].includes(lang)) lang = 'en';
     currentLang = lang;
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+    document.title = localized('BashUpload - One-Time File Sharing', 'BashUpload - 一次性文件分享服务', 'BashUpload - 一次性檔案分享服務');
+    localStorage.setItem('bashupload-language', lang);
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) languageSelect.value = lang;
     // Update all elements with lang-text class
     document.querySelectorAll('.lang-text').forEach(element => {
         const text = element.getAttribute('data-' + lang);
@@ -293,9 +336,7 @@ function handleTextUpload() {
     const text = textInput.value.trim();
 
     if (!text) {
-        const errorMsg = currentLang === 'zh'
-            ? '请输入要分享的文本内容'
-            : 'Please enter text content to share';
+        const errorMsg = localized('Please enter text content to share', '请输入要分享的文本内容', '請輸入要分享的文字內容');
         showStatus(errorMsg, 'error');
         return;
     }
@@ -305,9 +346,7 @@ function handleTextUpload() {
     const requirePassword = Boolean(serverConfig?.needPassword);
     const passwordInput = document.getElementById('passwordInput');
     if ((requirePassword || usePassword) && (!passwordInput || !passwordInput.value.trim())) {
-        const errorMsg = currentLang === 'zh'
-            ? '请输入密码以启用密码保护。'
-            : 'Please enter a password to enable password protection.';
+        const errorMsg = localized('Please enter a password to enable password protection.', '请输入密码以启用密码保护。', '請輸入密碼以啟用密碼保護。');
         showStatus(errorMsg, 'error');
         return;
     }
@@ -317,9 +356,7 @@ function handleTextUpload() {
 
 // Upload text content
 async function uploadText(text, maxRetries = 3) {
-    const uploadingMsg = currentLang === 'zh'
-        ? '正在上传文本...'
-        : 'Uploading text...';
+    const uploadingMsg = localized('Uploading text...', '正在上传文本...', '正在上傳文字...');
     showStatus(uploadingMsg, 'uploading');
     showProgress();
 
@@ -357,22 +394,14 @@ async function uploadText(text, maxRetries = 3) {
                                 unit = 'minutes';
                             }
 
-                            let expirationString = currentLang === 'zh'
-                                ? `${value}${unit}`
-                                : `${value} ${unit}`;
+                            let expirationString = formatExpiration(value, unit);
 
-                            successMsg = currentLang === 'zh'
-                                ? `文本上传成功！(有效期: ${expirationString})`
-                                : `Text uploaded successfully! (Expiration: ${expirationString})`;
+                            successMsg = localized(`Text uploaded successfully! (Expiration: ${expirationString})`, `文本上传成功！(有效期: ${expirationString})`, `文字上傳成功！（有效期限：${expirationString}）`);
                         } else {
-                            successMsg = currentLang === 'zh'
-                                ? `文本上传成功！(默认有效期: 1小时)`
-                                : `Text uploaded successfully! (Default expiration: 1 hour)`;
+                            successMsg = localized(`Text uploaded successfully! (Default expiration: 1 hour)`, `文本上传成功！(默认有效期: 1小时)`, `文字上傳成功！（預設有效期限：1 小時）`);
                         }
                     } else {
-                        successMsg = currentLang === 'zh'
-                            ? `文本上传成功！(一次性下载)`
-                            : `Text uploaded successfully! (One-time download)`;
+                        successMsg = localized(`Text uploaded successfully! (One-time download)`, `文本上传成功！(一次性下载)`, `文字上傳成功！（僅能下載一次）`);
                     }
                     showStatus(successMsg, 'success');
                     // 提取纯URL（去除警告信息）
@@ -385,16 +414,12 @@ async function uploadText(text, maxRetries = 3) {
                     document.getElementById('textInput').value = '';
                     return;
                 } else {
-                    const errorMsg = currentLang === 'zh'
-                        ? '上传完成但收到意外响应'
-                        : 'Upload completed but received unexpected response';
+                    const errorMsg = localized('Upload completed but received unexpected response', '上传完成但收到意外响应', '上傳完成，但收到非預期的回應');
                     throw new Error(errorMsg);
                 }
             } else if (response.status === 401) {
                 hideProgress();
-                const passwordErrorMsg = currentLang === 'zh'
-                    ? '密码错误，请检查您输入的密码是否与服务器配置的PASSWORD环境变量相同'
-                    : 'Password error, please check that the password you entered matches the PASSWORD environment variable configured on the server';
+                const passwordErrorMsg = localized('Password error, please check that the password you entered matches the PASSWORD environment variable configured on the server', '密码错误，请检查您输入的密码是否与服务器配置的PASSWORD环境变量相同', '密碼錯誤，請確認輸入的密碼與伺服器設定的 PASSWORD 環境變數相同');
                 showStatus(passwordErrorMsg, 'error');
                 return;
             } else {
@@ -407,9 +432,7 @@ async function uploadText(text, maxRetries = 3) {
             if (attempt < maxRetries) {
                 const delay = Math.pow(2, attempt - 1) * 1000;
                 console.log(`Retrying in ${delay/1000} seconds...`);
-                const retryMsg = currentLang === 'zh'
-                    ? `上传失败，${delay/1000} 秒后重试...`
-                    : `Upload failed, retrying in ${delay/1000} seconds...`;
+                const retryMsg = localized(`Upload failed, retrying in ${delay/1000} seconds...`, `上传失败，${delay/1000} 秒后重试...`, `上傳失敗，${delay/1000} 秒後重試...`);
                 showStatus(retryMsg, 'uploading');
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
@@ -417,9 +440,7 @@ async function uploadText(text, maxRetries = 3) {
     }
 
     hideProgress();
-    const failedMsg = currentLang === 'zh'
-        ? `上传文本失败，已重试 ${maxRetries} 次。错误：${lastError.message}`
-        : `Failed to upload text after ${maxRetries} attempts. Error: ${lastError.message}`;
+    const failedMsg = localized(`Failed to upload text after ${maxRetries} attempts. Error: ${lastError.message}`, `上传文本失败，已重试 ${maxRetries} 次。错误：${lastError.message}`, `上傳文字失敗，已重試 ${maxRetries} 次。錯誤：${lastError.message}`);
     showStatus(failedMsg, 'error');
 }
 
@@ -587,7 +608,8 @@ function updateTextInputPlaceholder() {
     if (textInput) {
         const enPlaceholder = textInput.getAttribute('data-en-placeholder');
         const zhPlaceholder = textInput.getAttribute('data-zh-placeholder');
-        textInput.placeholder = currentLang === 'zh' ? zhPlaceholder : enPlaceholder;
+    const twPlaceholder = textInput.getAttribute('data-zh-tw-placeholder');
+        textInput.placeholder = localized(enPlaceholder, zhPlaceholder, twPlaceholder);
     }
 }
 
@@ -595,7 +617,8 @@ function updatePasswordPlaceholder() {
     const passwordInput = document.getElementById('passwordInput');
     const enPlaceholder = passwordInput.getAttribute('data-en-placeholder');
     const zhPlaceholder = passwordInput.getAttribute('data-zh-placeholder');
-    passwordInput.placeholder = currentLang === 'zh' ? zhPlaceholder : enPlaceholder;
+    const twPlaceholder = passwordInput.getAttribute('data-zh-tw-placeholder');
+    passwordInput.placeholder = localized(enPlaceholder, zhPlaceholder, twPlaceholder);
     
     // Update password notice text
     const passwordNotice = document.getElementById('passwordNotice');
@@ -604,7 +627,8 @@ function updatePasswordPlaceholder() {
         if (noticeText) {
             const enText = noticeText.getAttribute('data-en');
             const zhText = noticeText.getAttribute('data-zh');
-            noticeText.textContent = currentLang === 'zh' ? zhText : enText;
+            const twText = noticeText.getAttribute('data-zh-tw');
+            noticeText.textContent = localized(enText, zhText, twText);
         }
     }
 }
@@ -613,7 +637,8 @@ function updateExpirationPlaceholder() {
     const expirationInput = document.getElementById('expirationInput');
     const enPlaceholder = expirationInput.getAttribute('data-en-placeholder');
     const zhPlaceholder = expirationInput.getAttribute('data-zh-placeholder');
-    expirationInput.placeholder = currentLang === 'zh' ? zhPlaceholder : enPlaceholder;
+    const twPlaceholder = expirationInput.getAttribute('data-zh-tw-placeholder');
+    expirationInput.placeholder = localized(enPlaceholder, zhPlaceholder, twPlaceholder);
     
     // Update expiration units text
     const expirationUnit = document.getElementById('expirationUnit');
@@ -626,6 +651,11 @@ function updateExpirationPlaceholder() {
         optionSeconds.textContent = '秒';
         optionMinutes.textContent = '分钟';
         optionHours.textContent = '小时';
+        optionDays.textContent = '天';
+    } else if (currentLang === 'zh-TW') {
+        optionSeconds.textContent = '秒';
+        optionMinutes.textContent = '分鐘';
+        optionHours.textContent = '小時';
         optionDays.textContent = '天';
     } else {
         optionSeconds.textContent = 'seconds';
@@ -713,9 +743,7 @@ async function uploadFile(file) {
     const maxFileSize = serverConfig?.maxUploadSize || (5 * 1024 * 1024 * 1024); // Default 5GB if config not loaded
     if (file.size > maxFileSize) {
         const maxSizeText = formatBytes(maxFileSize);
-        const errorMsg = currentLang === 'zh' 
-            ? `文件 ${file.name} 超过 ${maxSizeText} 大小限制。` 
-            : `File ${file.name} exceeds ${maxSizeText} size limit.`;
+        const errorMsg = localized(`File ${file.name} exceeds ${maxSizeText} size limit.`, `文件 ${file.name} 超过 ${maxSizeText} 大小限制。`, `檔案 ${file.name} 超過 ${maxSizeText} 的大小限制。`);
         showStatus(errorMsg, 'error');
         return;
     }
@@ -725,9 +753,7 @@ async function uploadFile(file) {
     const requirePassword = Boolean(serverConfig?.needPassword);
     const passwordInput = document.getElementById('passwordInput');
     if ((requirePassword || usePassword) && (!passwordInput || !passwordInput.value.trim())) {
-        const errorMsg = currentLang === 'zh' 
-            ? '请输入密码以启用密码保护。' 
-            : 'Please enter a password to enable password protection.';
+        const errorMsg = localized('Please enter a password to enable password protection.', '请输入密码以启用密码保护。', '請輸入密碼以啟用密碼保護。');
         showStatus(errorMsg, 'error');
         return;
     }
@@ -769,24 +795,16 @@ function addFileToList(fileName, url, usePassword = false) {
                 unit = 'minutes';
             }
             
-            let expirationString = currentLang === 'zh' 
-                ? `${value}${unit}` 
-                : `${value} ${unit}`;
+            let expirationString = formatExpiration(value, unit);
             
-            warningText.innerHTML = currentLang === 'zh' 
-                ? `🕐 注意：此文件将在 ${expirationString} 后过期，期间可多次下载` 
-                : `🕐 Note: This file will expire after ${expirationString} and can be downloaded multiple times`;
+            warningText.innerHTML = localized(`🕐 Note: This file will expire after ${expirationString} and can be downloaded multiple times`, `🕐 注意：此文件将在 ${expirationString} 后过期，期间可多次下载`, `🕐 注意：此檔案將於 ${expirationString} 後到期，期間可重複下載`);
         } else {
             // Default to 1 hour if no specific time was set
-            let expirationString = currentLang === 'zh' ? '1小时' : '1 hour';
-            warningText.innerHTML = currentLang === 'zh' 
-                ? `🕐 注意：此文件将在 ${expirationString} 后过期，期间可多次下载` 
-                : `🕐 Note: This file will expire after ${expirationString} and can be downloaded multiple times`;
+            let expirationString = localized('1 hour', '1小时', '1 小時');
+            warningText.innerHTML = localized(`🕐 Note: This file will expire after ${expirationString} and can be downloaded multiple times`, `🕐 注意：此文件将在 ${expirationString} 后过期，期间可多次下载`, `🕐 注意：此檔案將於 ${expirationString} 後到期，期間可重複下載`);
         }
     } else {
-        warningText.innerHTML = currentLang === 'zh' 
-            ? '⚠️ 注意：此链接只能使用一次，下载后文件将自动删除' 
-            : '⚠️ Note: This link can only be used once, file will be deleted after download';
+        warningText.innerHTML = localized('⚠️ Note: This link can only be used once, file will be deleted after download', '⚠️ 注意：此链接只能使用一次，下载后文件将自动删除', '⚠️ 注意：此連結只能使用一次，下載後檔案將自動刪除');
     }
     
     // 添加密码保护警告
@@ -796,9 +814,7 @@ function addFileToList(fileName, url, usePassword = false) {
         passwordWarning.style.color = '#e74c3c';
         passwordWarning.style.fontSize = '12px';
         passwordWarning.style.marginBottom = '5px';
-        passwordWarning.innerHTML = currentLang === 'zh' 
-            ? '🔒 注意：此链接需要密码才能下载' 
-            : '🔒 Note: This link requires a password to download';
+        passwordWarning.innerHTML = localized('🔒 Note: This link requires a password to download', '🔒 注意：此链接需要密码才能下载', '🔒 注意：此連結需要密碼才能下載');
     }
     
     const fileUrl = document.createElement('span');
@@ -807,12 +823,12 @@ function addFileToList(fileName, url, usePassword = false) {
     
     const copyButton = document.createElement('button');
     copyButton.className = 'copy-button';
-    copyButton.textContent = currentLang === 'zh' ? '复制链接' : 'Copy URL';
+    copyButton.textContent = localized('Copy URL', '复制链接', '複製連結');
     copyButton.onclick = function() {
         copyToClipboard(url);
-        copyButton.textContent = currentLang === 'zh' ? '已复制！' : 'Copied!';
+        copyButton.textContent = localized('Copied!', '已复制！', '已複製！');
         setTimeout(() => {
-            copyButton.textContent = currentLang === 'zh' ? '复制链接' : 'Copy URL';
+            copyButton.textContent = localized('Copy URL', '复制链接', '複製連結');
         }, 2000);
     };
     
@@ -826,9 +842,7 @@ function addFileToList(fileName, url, usePassword = false) {
 }
 
 async function uploadSimpleFile(file, maxRetries = 3) {
-    const uploadingMsg = currentLang === 'zh' 
-        ? `正在上传 ${file.name}...` 
-        : `Uploading ${file.name}...`;
+    const uploadingMsg = localized(`Uploading ${file.name}...`, `正在上传 ${file.name}...`, `正在上傳 ${file.name}...`);
     showStatus(uploadingMsg, 'uploading');
     showProgress();
     
@@ -867,22 +881,14 @@ async function uploadSimpleFile(file, maxRetries = 3) {
                                 unit = 'minutes';
                             }
                             
-                            let expirationString = currentLang === 'zh' 
-                                ? `${value}${unit}` 
-                                : `${value} ${unit}`;
+                            let expirationString = formatExpiration(value, unit);
                             
-                            successMsg = currentLang === 'zh' 
-                                ? `成功上传 ${file.name}！(有效期: ${expirationString})` 
-                                : `Successfully uploaded ${file.name}! (Expiration: ${expirationString})`;
+                            successMsg = localized(`Successfully uploaded ${file.name}! (Expiration: ${expirationString})`, `成功上传 ${file.name}！(有效期: ${expirationString})`, `${file.name} 上傳成功！（有效期限：${expirationString}）`);
                         } else {
-                            successMsg = currentLang === 'zh' 
-                                ? `成功上传 ${file.name}！(默认有效期: 1小时)` 
-                                : `Successfully uploaded ${file.name}! (Default expiration: 1 hour)`;
+                            successMsg = localized(`Successfully uploaded ${file.name}! (Default expiration: 1 hour)`, `成功上传 ${file.name}！(默认有效期: 1小时)`, `${file.name} 上傳成功！（預設有效期限：1 小時）`);
                         }
                     } else {
-                        successMsg = currentLang === 'zh' 
-                            ? `成功上传 ${file.name}！(一次性下载)` 
-                            : `Successfully uploaded ${file.name}! (One-time download)`;
+                        successMsg = localized(`Successfully uploaded ${file.name}! (One-time download)`, `成功上传 ${file.name}！(一次性下载)`, `${file.name} 上傳成功！（僅能下載一次）`);
                     }
                     showStatus(successMsg, 'success');
                     // 提取纯URL（去除警告信息）
@@ -892,17 +898,13 @@ async function uploadSimpleFile(file, maxRetries = 3) {
                     uploadedFiles.push({ name: file.name, url: cleanUrl, passwordProtected: usePassword });
                     return;
                 } else {
-                    const errorMsg = currentLang === 'zh' 
-                        ? '上传完成但收到意外响应' 
-                        : 'Upload completed but received unexpected response';
+                    const errorMsg = localized('Upload completed but received unexpected response', '上传完成但收到意外响应', '上傳完成，但收到非預期的回應');
                     throw new Error(errorMsg);
                 }
             } else if (response.status === 401) {
                 // Handle password error specifically
                 hideProgress();
-                const passwordErrorMsg = currentLang === 'zh' 
-                    ? '密码错误，请检查您输入的密码是否与服务器配置的PASSWORD环境变量相同' 
-                    : 'Password error, please check that the password you entered matches the PASSWORD environment variable configured on the server';
+                const passwordErrorMsg = localized('Password error, please check that the password you entered matches the PASSWORD environment variable configured on the server', '密码错误，请检查您输入的密码是否与服务器配置的PASSWORD环境变量相同', '密碼錯誤，請確認輸入的密碼與伺服器設定的 PASSWORD 環境變數相同');
                 showStatus(passwordErrorMsg, 'error');
                 return;
             } else {
@@ -915,9 +917,7 @@ async function uploadSimpleFile(file, maxRetries = 3) {
             if (attempt < maxRetries) {
                 const delay = Math.pow(2, attempt - 1) * 1000;
                 console.log(`Retrying in ${delay/1000} seconds...`);
-                const retryMsg = currentLang === 'zh' 
-                    ? `上传失败，${delay/1000} 秒后重试...` 
-                    : `Upload failed, retrying in ${delay/1000} seconds...`;
+                const retryMsg = localized(`Upload failed, retrying in ${delay/1000} seconds...`, `上传失败，${delay/1000} 秒后重试...`, `上傳失敗，${delay/1000} 秒後重試...`);
                 showStatus(retryMsg, 'uploading');
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
@@ -925,9 +925,7 @@ async function uploadSimpleFile(file, maxRetries = 3) {
     }
     
     hideProgress();
-    const failedMsg = currentLang === 'zh' 
-        ? `上传 ${file.name} 失败，已重试 ${maxRetries} 次。错误：${lastError.message}` 
-        : `Failed to upload ${file.name} after ${maxRetries} attempts. Error: ${lastError.message}`;
+    const failedMsg = localized(`Failed to upload ${file.name} after ${maxRetries} attempts. Error: ${lastError.message}`, `上传 ${file.name} 失败，已重试 ${maxRetries} 次。错误：${lastError.message}`, `上傳 ${file.name} 失敗，已重試 ${maxRetries} 次。錯誤：${lastError.message}`);
     showStatus(failedMsg, 'error');
 }
 

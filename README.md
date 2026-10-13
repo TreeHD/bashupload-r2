@@ -51,6 +51,9 @@ source ~/.bashrc
 
 ## Browser Upload
 
+The web interface supports **English**, **Simplified Chinese (zh-CN)** and **Traditional Chinese (zh-TW)**. It automatically detects the browser language, and a language selector lets you override it. Your choice is remembered in the browser.
+
+
 - Drag & drop files or click to select files
 - Set custom expiration time for files
 - Direct download links

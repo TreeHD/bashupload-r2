@@ -3,13 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BashUpload - 一次性文件分享服务 | One-Time File Sharing</title>
+    <title>BashUpload - One-Time File Sharing</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div class="container">
         <h1>BashUpload</h1>
-        <p class="subtitle lang-text" data-en="One-time file sharing service for the command line" data-zh="命令行一次性文件分享服务">One-time file sharing service for the command line</p>
+        <div class="language-switcher">
+            <label for="languageSelect">Language / 語言</label>
+            <select id="languageSelect" aria-label="Language / 語言" onchange="switchLanguage(this.value)">
+                <option value="en">English</option>
+                <option value="zh">简体中文</option>
+                <option value="zh-TW">繁體中文</option>
+            </select>
+        </div>
+        <p class="subtitle lang-text" data-en="One-time file sharing service for the command line" data-zh="命令行一次性文件分享服务" data-zh-tw="適用於命令列的一次性檔案分享服務">One-time file sharing service for the command line</p>
         
         <div class="action-buttons">
             <a href="https://github.com/DullJZ/bashupload-r2" target="_blank" class="github-link">
@@ -22,38 +30,38 @@
                 <img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare Workers"/>
             </a>
         </div>
-        <p class="star-message lang-text" data-en="If you find this useful, please give my project a ⭐ Star on GitHub!" data-zh="如果觉得好用的话，欢迎给我的项目点个 ⭐ Star！">If you find this useful, please give my project a ⭐ Star on GitHub!</p>
+        <p class="star-message lang-text" data-en="If you find this useful, please give my project a ⭐ Star on GitHub!" data-zh="如果觉得好用的话，欢迎给我的项目点个 ⭐ Star！" data-zh-tw="如果覺得好用，歡迎到 GitHub 幫這個專案點個 ⭐ Star！">If you find this useful, please give my project a ⭐ Star on GitHub!</p>
         <p style="color: #ff6b35; font-weight: bold; margin-top: 10px;">
-            <span class="lang-text" data-en="⚠️ Files can only be downloaded once, unless an expiration time is set" data-zh="⚠️ 文件只能下载一次，除非设置了有效期">⚠️ Files can only be downloaded once, unless an expiration time is set</span>
+            <span class="lang-text" data-en="⚠️ Files can only be downloaded once, unless an expiration time is set" data-zh="⚠️ 文件只能下载一次，除非设置了有效期" data-zh-tw="⚠️ 檔案只能下載一次，除非設定了有效期限">⚠️ Files can only be downloaded once, unless an expiration time is set</span>
         </p>
         
         <div class="section">
-            <h2 class="lang-text" data-en="Quick Start" data-zh="快速开始">Quick Start</h2>
+            <h2 class="lang-text" data-en="Quick Start" data-zh="快速开始" data-zh-tw="快速開始">Quick Start</h2>
             <div class="code-block">$ curl bashupload.app -T file.txt</div>
             <div class="code-block" style="margin-top: 10px;">$ curl bashupload.app -d "your text content"</div>
         </div>
 
         <div class="section">
-            <h2 class="lang-text" data-en="Browser Upload" data-zh="浏览器上传">Browser Upload</h2>
+            <h2 class="lang-text" data-en="Browser Upload" data-zh="浏览器上传" data-zh-tw="瀏覽器上傳">Browser Upload</h2>
 
             <!-- Upload mode toggle buttons -->
             <div class="upload-mode-toggle">
                 <button class="mode-button active" id="fileModeBtn" onclick="switchUploadMode('file')">
-                    <span class="lang-text" data-en="📁 Upload File" data-zh="📁 上传文件">📁 Upload File</span>
+                    <span class="lang-text" data-en="📁 Upload File" data-zh="📁 上传文件" data-zh-tw="📁 上傳檔案">📁 Upload File</span>
                 </button>
                 <button class="mode-button" id="textModeBtn" onclick="switchUploadMode('text')">
-                    <span class="lang-text" data-en="📝 Share Text" data-zh="📝 分享文本">📝 Share Text</span>
+                    <span class="lang-text" data-en="📝 Share Text" data-zh="📝 分享文本" data-zh-tw="📝 分享文字">📝 Share Text</span>
                 </button>
             </div>
 
             <!-- File upload area -->
             <div class="upload-container" id="uploadContainer">
                 <div class="upload-icon">📁</div>
-                <h3 class="lang-text" data-en="Drag & Drop files here" data-zh="拖放文件到这里">Drag & Drop files here</h3>
-                <p class="upload-text lang-text" data-en="or click to select files" data-zh="或点击选择文件">or click to select files</p>
-                <button class="upload-button lang-text" onclick="document.getElementById('fileInput').click()" data-en="Choose Files" data-zh="选择文件">Choose Files</button>
+                <h3 class="lang-text" data-en="Drag & Drop files here" data-zh="拖放文件到这里" data-zh-tw="將檔案拖曳到這裡">Drag & Drop files here</h3>
+                <p class="upload-text lang-text" data-en="or click to select files" data-zh="或点击选择文件" data-zh-tw="或點擊選擇檔案">or click to select files</p>
+                <button class="upload-button lang-text" onclick="document.getElementById('fileInput').click()" data-en="Choose Files" data-zh="选择文件" data-zh-tw="選擇檔案">Choose Files</button>
                 <div id="maxFileSizeInfo" style="margin-top: 5px; font-size: 11px; color: #666;">
-                    <span class="lang-text" data-en="Max: --" data-zh="最大: --">Max: --</span>
+                    <span class="lang-text" data-en="Max: --" data-zh="最大: --" data-zh-tw="最大：--">Max: --</span>
                 </div>
                 <input type="file" id="fileInput" multiple onchange="handleFileSelect(event)">
             </div>
@@ -61,16 +69,16 @@
             <!-- Text upload area -->
             <div class="text-upload-container" id="textUploadContainer" style="display: none;">
                 <div class="text-upload-icon">📝</div>
-                <h3 class="lang-text" data-en="Share Long Text" data-zh="分享长文本">Share Long Text</h3>
-                <p class="upload-text lang-text" data-en="Paste your text content below (saved as .txt file)" data-zh="在下方粘贴您的文本内容（保存为 .txt 文件）">Paste your text content below (saved as .txt file)</p>
+                <h3 class="lang-text" data-en="Share Long Text" data-zh="分享长文本" data-zh-tw="分享長篇文字">Share Long Text</h3>
+                <p class="upload-text lang-text" data-en="Paste your text content below (saved as .txt file)" data-zh="在下方粘贴您的文本内容（保存为 .txt 文件）" data-zh-tw="在下方貼上文字內容（將儲存為 .txt 檔案）">Paste your text content below (saved as .txt file)</p>
                 <textarea id="textInput"
                           class="text-input"
                           placeholder="Enter your text content here..."
                           data-en-placeholder="Enter your text content here..."
-                          data-zh-placeholder="在此输入您的文本内容..."
+                          data-zh-placeholder="在此输入您的文本内容..." data-zh-tw-placeholder="在這裡輸入文字內容..."
                           rows="10"></textarea>
                 <button class="upload-button" id="uploadTextBtn" onclick="handleTextUpload()">
-                    <span class="lang-text" data-en="Upload Text" data-zh="上传文本">Upload Text</span>
+                    <span class="lang-text" data-en="Upload Text" data-zh="上传文本" data-zh-tw="上傳文字">Upload Text</span>
                 </button>
             </div>
 
@@ -79,36 +87,36 @@
                 <div class="upload-options">
                     <label class="checkbox-label">
                         <input type="checkbox" id="useShortUrl" class="checkbox-input">
-                        <span class="lang-text" data-en="Generate short URL" data-zh="生成短网址">Generate short URL</span>
+                        <span class="lang-text" data-en="Generate short URL" data-zh="生成短网址" data-zh-tw="產生短網址">Generate short URL</span>
                         <span class="tooltip-icon">ℹ️</span>
                         <span class="tooltip-text lang-text" 
                               data-en="Generate a shorter URL for easier sharing" 
-                              data-zh="生成更短的网址，方便分享">Generate a shorter URL for easier sharing</span>
+                              data-zh="生成更短的网址，方便分享" data-zh-tw="產生較短的網址，方便分享">Generate a shorter URL for easier sharing</span>
                     </label>
                     <label class="checkbox-label" style="margin-left: 15px;">
                         <input type="checkbox" id="usePassword" class="checkbox-input">
-                        <span class="lang-text" data-en="Use password protection" data-zh="使用密码保护">Use password protection</span>
+                        <span class="lang-text" data-en="Use password protection" data-zh="使用密码保护" data-zh-tw="使用密碼保護">Use password protection</span>
                         <span class="tooltip-icon">ℹ️</span>
                         <span class="tooltip-text lang-text" 
                               data-en="Enter the server password to protect your upload" 
-                              data-zh="输入服务器密码以保护您的上传文件">Enter the server password to protect your upload</span>
+                              data-zh="输入服务器密码以保护您的上传文件" data-zh-tw="輸入伺服器密碼以保護上傳內容">Enter the server password to protect your upload</span>
                     </label>
                 </div>
                 <div class="upload-options" style="margin-top: 15px;">
                     <label class="checkbox-label">
                         <input type="checkbox" id="useExpiration" class="checkbox-input">
-                        <span class="lang-text" data-en="Set expiration time" data-zh="设置有效期">Set expiration time</span>
+                        <span class="lang-text" data-en="Set expiration time" data-zh="设置有效期" data-zh-tw="設定有效期限">Set expiration time</span>
                         <span class="tooltip-icon">ℹ️</span>
                         <span class="tooltip-text lang-text" 
                               data-en="File will be available for multiple downloads until expiration time" 
-                              data-zh="文件在有效期内可多次下载，到期自动删除">File will be available for multiple downloads until expiration time</span>
+                              data-zh="文件在有效期内可多次下载，到期自动删除" data-zh-tw="檔案在有效期限內可重複下載，到期後會自動刪除">File will be available for multiple downloads until expiration time</span>
                     </label>
                     <div id="expirationContainer" style="display: none; margin-top: 10px; margin-left: 20px;">
                         <input type="number" id="expirationInput" 
                                class="expiration-input" 
                                placeholder="Expiration value" 
                                data-en-placeholder="Expiration value"
-                               data-zh-placeholder="有效期数值"
+                               data-zh-placeholder="有效期数值" data-zh-tw-placeholder="有效期限"
                                min="1" 
                                value="1"
                                style="width: 80px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; margin-right: 8px;">
@@ -119,13 +127,13 @@
                             <option value="days">天</option>
                         </select>
                         <button id="setExpirationBtn" class="set-expiration-btn" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                            <span class="lang-text" data-en="Set" data-zh="设置">Set</span>
+                            <span class="lang-text" data-en="Set" data-zh="设置" data-zh-tw="設定">Set</span>
                         </button>
                         <div id="expirationResult" style="margin-top: 5px; font-size: 12px; color: #28a745; display: none;">
-                            <span class="lang-text" data-en="✓ Expiration time set" data-zh="✓ 有效期已设置">✓ Expiration time set</span>
+                            <span class="lang-text" data-en="✓ Expiration time set" data-zh="✓ 有效期已设置" data-zh-tw="✓ 已設定有效期限">✓ Expiration time set</span>
                         </div>
                         <div id="maxExpirationInfo" style="margin-top: 5px; font-size: 11px; color: #666;">
-                            <span class="lang-text" data-en="💡 Maximum allowed: --" data-zh="💡 最大允许值: --">💡 Maximum allowed: --</span>
+                            <span class="lang-text" data-en="💡 Maximum allowed: --" data-zh="💡 最大允许值: --" data-zh-tw="💡 允許的最長期限：--">💡 Maximum allowed: --</span>
                         </div>
                     </div>
                 </div>
@@ -134,9 +142,9 @@
                            class="password-input" 
                            placeholder="Enter server password" 
                            data-en-placeholder="Enter server password"
-                           data-zh-placeholder="输入服务器密码">
+                           data-zh-placeholder="输入服务器密码" data-zh-tw-placeholder="輸入伺服器密碼">
                     <div id="passwordNotice" style="margin-top: 8px; font-size: 12px; color: #666;">
-                        <span class="lang-text" data-en="⚠️ Important: The password must match the server's PASSWORD environment variable" data-zh="⚠️ 重要：密码必须与服务器的 PASSWORD 环境变量相同">⚠️ Important: The password must match the server's PASSWORD environment variable</span>
+                        <span class="lang-text" data-en="⚠️ Important: The password must match the server's PASSWORD environment variable" data-zh="⚠️ 重要：密码必须与服务器的 PASSWORD 环境变量相同" data-zh-tw="⚠️ 注意：密碼必須與伺服器的 PASSWORD 環境變數相同">⚠️ Important: The password must match the server's PASSWORD environment variable</span>
                     </div>
                 </div>
             </div>
@@ -149,44 +157,44 @@
         </div>
 
         <div class="section">
-            <h2 class="lang-text" data-en="Features" data-zh="特征">Features</h2>
+            <h2 class="lang-text" data-en="Features" data-zh="特征" data-zh-tw="功能特色">Features</h2>
             <div class="features">
                 <div class="feature" style="color: #ff6b35; font-weight: bold;">
-                    <span class="lang-text" data-en="🔐 One-time download: Files are deleted after first access (unless expiration is set)" data-zh="🔐 一次性下载：文件在首次访问后删除（除非设置了有效期）">🔐 One-time download: Files are deleted after first access (unless expiration is set)</span>
+                    <span class="lang-text" data-en="🔐 One-time download: Files are deleted after first access (unless expiration is set)" data-zh="🔐 一次性下载：文件在首次访问后删除（除非设置了有效期）" data-zh-tw="🔐 一次性下載：首次下載後即刪除檔案（除非設定了有效期限）">🔐 One-time download: Files are deleted after first access (unless expiration is set)</span>
                 </div>
                 <div class="feature" style="color: #ff6b35; font-weight: bold;">
-                    <span class="lang-text" data-en="🛡️ Maximum privacy: Files automatically deleted after expiration" data-zh="🛡️ 最大隐私保护：文件在有效期后自动删除">🛡️ Maximum privacy: Files automatically deleted after expiration</span>
+                    <span class="lang-text" data-en="🛡️ Maximum privacy: Files automatically deleted after expiration" data-zh="🛡️ 最大隐私保护：文件在有效期后自动删除" data-zh-tw="🛡️ 隱私保護：檔案會在有效期限結束後自動刪除">🛡️ Maximum privacy: Files automatically deleted after expiration</span>
                 </div>
-                <div class="feature lang-text" data-en="Simple command-line interface" data-zh="简单的命令行接口">Simple command-line interface</div>
-                <div class="feature lang-text" data-en="Quick text sharing: Use curl -d to share text snippets" data-zh="快速文本分享：使用 curl -d 分享文本片段">Quick text sharing: Use curl -d to share text snippets</div>
-                <div class="feature lang-text" data-en="Browser-based drag & drop upload" data-zh="浏览器拖放上传">Browser-based drag & drop upload</div>
-                <div class="feature lang-text" data-en="No registration required" data-zh="无需注册">No registration required</div>
-                <div class="feature lang-text" data-en="Privacy-focused: Random filenames" data-zh="隐私保护：随机文件名">Privacy-focused: Random filenames</div>
-                <div class="feature lang-text" data-en="Secure temporary storage with Cloudflare R2" data-zh="使用 Cloudflare R2 安全临时存储">Secure temporary storage with Cloudflare R2</div>
-                <div class="feature lang-text" id="maxFileSizeFeature" data-en="Supports files up to -- in size" data-zh="支持最大 -- 的文件">Supports files up to -- in size</div>
-                <div class="feature lang-text" data-en="Optional password protection for uploads" data-zh="可选的文件上传密码保护">Optional password protection for uploads</div>
+                <div class="feature lang-text" data-en="Simple command-line interface" data-zh="简单的命令行接口" data-zh-tw="簡單易用的命令列介面">Simple command-line interface</div>
+                <div class="feature lang-text" data-en="Quick text sharing: Use curl -d to share text snippets" data-zh="快速文本分享：使用 curl -d 分享文本片段" data-zh-tw="快速分享文字：使用 curl -d 分享文字片段">Quick text sharing: Use curl -d to share text snippets</div>
+                <div class="feature lang-text" data-en="Browser-based drag & drop upload" data-zh="浏览器拖放上传" data-zh-tw="支援從瀏覽器拖曳上傳">Browser-based drag & drop upload</div>
+                <div class="feature lang-text" data-en="No registration required" data-zh="无需注册" data-zh-tw="免註冊">No registration required</div>
+                <div class="feature lang-text" data-en="Privacy-focused: Random filenames" data-zh="隐私保护：随机文件名" data-zh-tw="保護隱私：使用隨機檔名">Privacy-focused: Random filenames</div>
+                <div class="feature lang-text" data-en="Secure temporary storage with Cloudflare R2" data-zh="使用 Cloudflare R2 安全临时存储" data-zh-tw="使用 Cloudflare R2 安全地暫存檔案">Secure temporary storage with Cloudflare R2</div>
+                <div class="feature lang-text" id="maxFileSizeFeature" data-en="Supports files up to -- in size" data-zh="支持最大 -- 的文件" data-zh-tw="支援最大 -- 的檔案">Supports files up to -- in size</div>
+                <div class="feature lang-text" data-en="Optional password protection for uploads" data-zh="可选的文件上传密码保护" data-zh-tw="可選擇使用密碼保護上傳內容">Optional password protection for uploads</div>
             </div>
         </div>
 
 
         <div class="section">
-            <h2 class="lang-text" data-en="How It Works" data-zh="工作原理">How It Works</h2>
+            <h2 class="lang-text" data-en="How It Works" data-zh="工作原理" data-zh-tw="運作方式">How It Works</h2>
             <ol>
-                <li class="lang-text" data-en="Use curl with the -T flag to upload your file" data-zh="使用 curl 和 -T 选项上传文件">Use curl with the -T flag to upload your file</li>
-                <li class="lang-text" data-en="(Optional) Set expiration time with -H 'X-Expiration-Seconds: 3600' for time-limited access" data-zh="（可选）使用 -H 'X-Expiration-Seconds: 3600' 设置有效期以限时访问">(Optional) Set expiration time with -H 'X-Expiration-Seconds: 3600' for time-limited access</li>
-                <li class="lang-text" data-en="Receive a unique download URL" data-zh="接收唯一的下载链接">Receive a unique download URL</li>
-                <li class="lang-text" data-en="Share the URL - works once without expiration, or multiple times until expiration!" data-zh="分享链接 - 无有效期时只能使用一次，有有效期时可多次使用直到过期！">Share the URL - works once without expiration, or multiple times until expiration!</li>
-                <li class="lang-text" data-en="File is automatically deleted after download or expiration" data-zh="文件在下载后或过期后自动删除">File is automatically deleted after download or expiration</li>
+                <li class="lang-text" data-en="Use curl with the -T flag to upload your file" data-zh="使用 curl 和 -T 选项上传文件" data-zh-tw="使用 curl 搭配 -T 參數上傳檔案">Use curl with the -T flag to upload your file</li>
+                <li class="lang-text" data-en="(Optional) Set expiration time with -H 'X-Expiration-Seconds: 3600' for time-limited access" data-zh="（可选）使用 -H 'X-Expiration-Seconds: 3600' 设置有效期以限时访问" data-zh-tw="（選用）使用 -H 'X-Expiration-Seconds: 3600' 設定存取期限">(Optional) Set expiration time with -H 'X-Expiration-Seconds: 3600' for time-limited access</li>
+                <li class="lang-text" data-en="Receive a unique download URL" data-zh="接收唯一的下载链接" data-zh-tw="取得專屬下載連結">Receive a unique download URL</li>
+                <li class="lang-text" data-en="Share the URL - works once without expiration, or multiple times until expiration!" data-zh="分享链接 - 无有效期时只能使用一次，有有效期时可多次使用直到过期！" data-zh-tw="分享連結：未設定有效期限時僅能下載一次，設定後可在到期前重複下載！">Share the URL - works once without expiration, or multiple times until expiration!</li>
+                <li class="lang-text" data-en="File is automatically deleted after download or expiration" data-zh="文件在下载后或过期后自动删除" data-zh-tw="檔案會在下載後或到期時自動刪除">File is automatically deleted after download or expiration</li>
             </ol>
             <div class="note" style="background-color: #e8f5e9; border-color: #4caf50; margin-top: 20px;">
-                <strong class="lang-text" data-en="🔒 Password Protection:" data-zh="🔒 密码保护：">🔒 Password Protection:</strong>
-                <span class="lang-text" data-en="When password protection is enabled, you must enter the server's configured PASSWORD in the upload form and include the same password in the Authorization header when downloading. Download with: curl -H 'Authorization: yourpassword' [URL]" data-zh="启用密码保护时，您必须在上传表单中输入服务器配置的 PASSWORD，并在下载时在 Authorization 头中包含相同的密码。下载使用：curl -H 'Authorization: yourpassword' [URL]">When password protection is enabled, you must enter the server's configured PASSWORD in the upload form and include the same password in the Authorization header when downloading. Download with: curl -H 'Authorization: yourpassword' [URL]</span>
+                <strong class="lang-text" data-en="🔒 Password Protection:" data-zh="🔒 密码保护：" data-zh-tw="🔒 密碼保護：">🔒 Password Protection:</strong>
+                <span class="lang-text" data-en="When password protection is enabled, you must enter the server's configured PASSWORD in the upload form and include the same password in the Authorization header when downloading. Download with: curl -H 'Authorization: yourpassword' [URL]" data-zh="启用密码保护时，您必须在上传表单中输入服务器配置的 PASSWORD，并在下载时在 Authorization 头中包含相同的密码。下载使用：curl -H 'Authorization: yourpassword' [URL]" data-zh-tw="啟用密碼保護後，請在上傳表單輸入伺服器設定的 PASSWORD，下載時也必須在 Authorization 標頭中提供相同密碼。下載指令：curl -H 'Authorization: yourpassword' [URL]">When password protection is enabled, you must enter the server's configured PASSWORD in the upload form and include the same password in the Authorization header when downloading. Download with: curl -H 'Authorization: yourpassword' [URL]</span>
             </div>
         </div>
 
         <div class="note" style="background-color: #fff3cd; border-color: #ff6b35;">
-            <strong class="lang-text" data-en="⚠️ Download Notice:" data-zh="⚠️ 下载注意：">⚠️ Download Notice:</strong>
-            <span class="lang-text" data-en="By default, files can only be downloaded ONCE. After the first download, the file is automatically and permanently deleted from our servers. If you set an expiration time, the file can be downloaded multiple times until it expires. This ensures maximum privacy and security for your shared files." data-zh="默认情况下，文件只能下载一次。首次下载后，文件将自动并永久地从我们的服务器删除。如果您设置了有效期，文件可以在有效期内多次下载。这确保了您共享文件的最大隐私和安全性。">By default, files can only be downloaded ONCE. After the first download, the file is automatically and permanently deleted from our servers. If you set an expiration time, the file can be downloaded multiple times until it expires. This ensures maximum privacy and security for your shared files.</span>
+            <strong class="lang-text" data-en="⚠️ Download Notice:" data-zh="⚠️ 下载注意：" data-zh-tw="⚠️ 下載須知：">⚠️ Download Notice:</strong>
+            <span class="lang-text" data-en="By default, files can only be downloaded ONCE. After the first download, the file is automatically and permanently deleted from our servers. If you set an expiration time, the file can be downloaded multiple times until it expires. This ensures maximum privacy and security for your shared files." data-zh="默认情况下，文件只能下载一次。首次下载后，文件将自动并永久地从我们的服务器删除。如果您设置了有效期，文件可以在有效期内多次下载。这确保了您共享文件的最大隐私和安全性。" data-zh-tw="預設每個檔案只能下載一次。首次下載後，檔案就會從伺服器永久刪除。如果設定了有效期限，則可在到期前重複下載，以保護分享檔案的隱私及安全性。">By default, files can only be downloaded ONCE. After the first download, the file is automatically and permanently deleted from our servers. If you set an expiration time, the file can be downloaded multiple times until it expires. This ensures maximum privacy and security for your shared files.</span>
         </div>
     </div>
 
