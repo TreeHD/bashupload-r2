@@ -1,4 +1,5 @@
 import mime from 'mime';
+import { getDefaultExpirationSeconds, getMaximumExpirationSeconds, resolveUploadExpiration } from './expiration.js';
 import { decodeObjectKey, encodeObjectKey } from './url-path.js';
 import { handleMultipart, MULTIPART_PART_SIZE, MULTIPART_SESSION_PREFIX, resolveExpirationTime, cleanupMultipartSession } from './multipart.js';
 
@@ -119,7 +120,8 @@ export default {
       // 获取服务端配置信息的API端点
       if (pathname === '/api/config') {
         const config = {
-          maxAgeForMultiDownload: parseInt(env.MAX_AGE_FOR_MULTIDOWNLOAD || '86400', 10),
+          maxAgeForMultiDownload: getMaximumExpirationSeconds(env),
+          defaultExpirationSeconds: getDefaultExpirationSeconds(env),
           maxUploadSize: parseInt(env.MAX_UPLOAD_SIZE || '5368709120', 10),
           multipartPartSize: MULTIPART_PART_SIZE,
           maxAge: parseInt(env.MAX_AGE || '3600', 10),
@@ -348,10 +350,18 @@ export default {
         }
       }
 
-      // 获取有效期参数（秒）
-      const expirationSeconds = request.headers.get('X-Expiration-Seconds');
-      const hasExpiration = expirationSeconds && !isNaN(parseInt(expirationSeconds, 10)) && parseInt(expirationSeconds, 10) > 0;
-      const expirationTime = hasExpiration ? parseInt(expirationSeconds, 10) : null;
+      // By default uploads remain available for DEFAULT_EXPIRATION_SECONDS.
+      // Explicit X-One-Time-Download: true opts into the legacy once-only mode.
+      let expirationTime;
+      try {
+        expirationTime = resolveUploadExpiration(env, {
+          expirationSeconds: request.headers.get('X-Expiration-Seconds'),
+          oneTime: /^(true|1)$/i.test(request.headers.get('X-One-Time-Download') || ''),
+        });
+      } catch (error) {
+        return new Response(`Upload failed: ${error.message}\n`, { status: 400 });
+      }
+      const hasExpiration = expirationTime !== null;
       const isOneTime = !hasExpiration;
 
       // 提取原始文件名
