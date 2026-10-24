@@ -1,4 +1,5 @@
 import { encodeObjectKey } from './url-path.js';
+import { resolveUploadExpiration } from './expiration.js';
 
 export const MULTIPART_PART_SIZE = 90 * 1024 * 1024; // 90 MiB = 94,371,840 bytes
 export const MULTIPART_SESSION_PREFIX = '_internal/multipart/';
@@ -108,11 +109,14 @@ export async function handleMultipart(request, env, options = {}) {
       const partCount = Math.ceil(size / partSize);
       if (partCount > MAX_PARTS) return fail('Too many parts', 413);
 
-      const expirationSeconds = body.expirationSeconds == null ? null : body.expirationSeconds;
-      const maxExpiration = Number(env.MAX_AGE_FOR_MULTIDOWNLOAD || 86400);
-      if (expirationSeconds !== null &&
-          (!Number.isSafeInteger(expirationSeconds) || expirationSeconds < 1 || expirationSeconds > maxExpiration)) {
-        return fail('Invalid expiration time');
+      let expirationSeconds;
+      try {
+        expirationSeconds = resolveUploadExpiration(env, {
+          expirationSeconds: body.expirationSeconds,
+          oneTime: body.oneTime === true,
+        });
+      } catch (error) {
+        return fail(error.message);
       }
 
       const contentType = typeof body.type === 'string' && body.type.length <= 255 && !/[\r\n]/.test(body.type)
