@@ -153,25 +153,27 @@ export async function handleMultipart(request, env, options = {}) {
       const expected = expectedPartBytes(session, partNumber);
       if (expected === null || !request.body) return fail('Invalid part number or empty part');
       const lengthHeader = request.headers.get('Content-Length');
-      if (lengthHeader !== null && Number(lengthHeader) !== expected) {
-        return fail('Incorrect part size', 413);
+      // Browser Blob uploads have a fixed Content-Length. Checking it before
+      // streaming prevents oversized or truncated parts being accepted.
+      if (lengthHeader === null) {
+        return fail('Content-Length is required for multipart parts', 411);
+      }
+      if (!Number.isSafeInteger(Number(lengthHeader)) || Number(lengthHeader) !== expected) {
+        return fail(`Incorrect size for part ${partNumber}: expected ${expected} bytes, got ${lengthHeader}`, 413);
       }
 
-      // Stream chunks to R2 with an exact byte count, without buffering 90 MiB in Worker memory.
-      let bytes = 0;
-      const validatedStream = request.body.pipeThrough(new TransformStream({
-        transform(chunk, controller) {
-          bytes += chunk.byteLength;
-          if (bytes > expected) throw new Error('Part is larger than expected');
-          controller.enqueue(chunk);
-        },
-        flush() {
-          if (bytes !== expected) throw new Error('Part is shorter than expected');
-        },
-      }));
+      // R2 requires a ReadableStream with a known length. TransformStream
+      // strips the fixed-length metadata from the incoming request body.
+      // Pass request.body through unchanged, as in the official R2 example.
+      // Neither buffering nor a content-transform is needed here.
       const upload = env.R2_BUCKET.resumeMultipartUpload(session.key, session.uploadId);
-      const part = await upload.uploadPart(partNumber, validatedStream);
-      return json({ partNumber: part.partNumber, etag: part.etag });
+      try {
+        const part = await upload.uploadPart(partNumber, request.body);
+        return json({ partNumber: part.partNumber, etag: part.etag });
+      } catch (error) {
+        console.error(`[Multipart part ${partNumber}] Upload failed (expected ${expected} bytes):`, error);
+        return fail(`Chunk ${partNumber}: ${error?.message || 'R2 upload failed'}`, 400);
+      }
     }
 
     if (action === '/api/multipart/complete' && request.method === 'POST') {
