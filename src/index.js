@@ -1,4 +1,5 @@
 import mime from 'mime';
+import { decodeObjectKey, encodeObjectKey } from './url-path.js';
 
 export default {
   // 处理定时任务
@@ -155,7 +156,10 @@ export default {
       }
 
       // 处理静态资源路径映射
-      let fileName = pathname.substring(1); // 移除开头的斜杠
+      const fileName = decodeObjectKey(pathname);
+      if (fileName === null) {
+        return new Response('Invalid file URL\n', { status: 400 });
+      }
 
       if (fileName === 'index.html' || fileName === 'style.css' || fileName === 'upload.js') {
         try {
@@ -400,7 +404,8 @@ export default {
 
       // 返回上传成功的 URL
       const url = new URL(request.url);
-      let fileUrl = `${url.protocol}//${url.hostname}/${fileName}`;
+      const originalFileUrl = `${url.origin}/${encodeObjectKey(fileName)}`;
+      let fileUrl = originalFileUrl;
 
       // 如果使用 /short 路径，尝试生成短链接
       if (forceShortUrl) {
@@ -421,7 +426,7 @@ export default {
             const shortUrlData = await shortUrlResponse.json();
             if (shortUrlData.Code === 1 && shortUrlData.ShortUrl) {
               fileUrl = shortUrlData.ShortUrl;
-              console.log(`Generated short URL: ${fileUrl} for original: ${url.protocol}//${url.hostname}/${fileName}`);
+              console.log(`Generated short URL: ${fileUrl} for original: ${originalFileUrl}`);
             } else if (forceShortUrl) {
               console.warn(`Short URL API returned unexpected response: ${JSON.stringify(shortUrlData)}`);
             }
