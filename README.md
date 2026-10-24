@@ -72,7 +72,7 @@ The web interface supports **English**, **Simplified Chinese (zh-CN)** and **Tra
 - Supports files up to 5GB in size (self-hosting can adjust this limit)
 - Support password setting for self-hosting
 
-**Privacy Notice:** For your privacy and security, files are automatically deleted from our servers immediately after they are downloaded. Each file can only be downloaded once, **unless you set an expiration time**. When an expiration time is set, the file can be downloaded multiple times until it expires. Make sure to save the file locally after downloading, as the link will no longer work after the first download (for one-time downloads) or after expiration (for time-limited downloads).
+**Privacy Notice:** By default, files can be downloaded repeatedly during their server-configured retention period (1 hour unless changed with `DEFAULT_EXPIRATION_SECONDS`), after which they expire and are removed by scheduled cleanup. An optional one-time mode deletes after the first download.
 
 ## Self-Hosting to Cloudflare
 
@@ -104,6 +104,28 @@ Multipart API endpoints (same-origin, and the existing `PASSWORD` if configured)
 
 The server stores an opaque, unguessable session in R2 and validates each part's exact byte count before forwarding it as a stream. A successful completion deletes the session. Abandoned sessions are cleaned up by the existing cron after **24 hours** (when `NO_CLEANUP` is disabled); R2 independently expires incomplete multipart uploads after seven days. Refreshing the page currently restarts the upload rather than resuming it. For best results, keep the page open while uploading.
 
+### Default retention for uploaded files
+
+Set `DEFAULT_EXPIRATION_SECONDS` in your Worker environment (or `wrangler.toml`) to control the default lifetime of **new** uploaded files. Default: `3600` (1 hour), with **multiple downloads allowed until expiration**. The setting must be between `0` and `MAX_AGE_FOR_MULTIDOWNLOAD`.
+
+| Value | Behavior |
+| --- | --- |
+| `3600` | 1 hour, repeat downloads (default) |
+| `86400` | 24 hours, repeat downloads (when `MAX_AGE_FOR_MULTIDOWNLOAD >= 86400`) |
+| `0` | Legacy default: one-time download (deleted after first access) |
+
+The browser's **One-time download** checkbox overrides the default. Selecting **Override default expiration time** sets a custom retention period. When both are unchecked, the upload uses `DEFAULT_EXPIRATION_SECONDS` as configured on the Worker. CLI uploads without any retention header also follow the default:
+
+```sh
+curl https://upload.treexhd.me -T file.txt
+# Request an explicit one-time download:
+curl -H "X-One-Time-Download: true" https://upload.treexhd.me -T file.txt
+# Override the default retention (example: 2 hours):
+curl -H "X-Expiration-Seconds: 7200" https://upload.treexhd.me -T file.txt
+```
+
+This applies to regular file PUT uploads, POST text uploads and browser-based R2 multipart uploads. `MAX_AGE` is still the scheduled cleanup fallback for objects without expiration metadata; the default retention value takes precedence for new reusable uploads. Changing the environment variable will **not retroactively update objects already stored in R2**. Deploy the updated Worker after changing it.
+
 ## Advanced Features
 
 ### Custom Expiration Time
@@ -123,7 +145,7 @@ curl -H "X-Expiration-Seconds: 604800" bashupload.app -T file.txt
 ```
 
 **Important Notes:**
-- Without expiration time, files can only be downloaded once (one-time download)
+- Without an explicit expiration time, the server uses `DEFAULT_EXPIRATION_SECONDS` (default 1 hour, multiple downloads). Select one-time mode explicitly when needed.
 - With expiration time, files can be downloaded multiple times until expiration
 - The maximum allowed expiration time is controlled by `MAX_AGE_FOR_MULTIDOWNLOAD` (default: 24 hours)
 - Browser upload also supports setting expiration times through the UI

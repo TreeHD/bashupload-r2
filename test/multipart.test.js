@@ -169,7 +169,7 @@ test('Unicode URL, multipart size, expiration and GET work end-to-end', async ()
 
 test('one-time metadata preserved', async () => {
   const { env, files } = environment();
-  const session = await init(env, null);
+  const session = await init(env, null, { oneTime: true });
   const parts = await sendParts(env, session);
   const complete = await api(env, '/api/multipart/complete', 'POST', { sessionId: session.sessionId, parts });
   assert.equal(complete.status, 200);
@@ -298,4 +298,55 @@ test('R2 errors are returned with failing chunk number rather than generic HTTP 
     'PUT', new Uint8Array(13));
   assert.equal(response.status, 400);
   assert.ok((await response.json()).error.includes('Chunk 2: Fake R2 failure (10013)'));
+});
+
+test('multipart requests with no expiration use DEFAULT_EXPIRATION_SECONDS', async () => {
+  const { env, files } = environment();
+  env.DEFAULT_EXPIRATION_SECONDS = '7200';
+  const response = await api(env, '/api/multipart/init', 'POST', {
+    name: FILE_NAME, size: PART_SIZE + 13, type: 'application/pdf'
+  });
+  assert.equal(response.status, 200);
+  const session = await response.json();
+  const parts = await sendParts(env, session);
+  const complete = await api(env, '/api/multipart/complete', 'POST', {
+    sessionId: session.sessionId, parts
+  });
+  assert.equal(complete.status, 200);
+  const result = await complete.json();
+  const key = decodeURIComponent(new URL(result.url).pathname.slice(1));
+  assert.equal(files.get(key).customMetadata.oneTime, 'false');
+  assert.equal(files.get(key).customMetadata.expirationSeconds, '7200');
+});
+
+test('multipart default of zero restores one-time uploads, but explicit expiry still works', async () => {
+  const { env, files } = environment();
+  env.DEFAULT_EXPIRATION_SECONDS = '0';
+  const makeSession = async (expirationSeconds) => {
+    const request = { name: FILE_NAME, size: PART_SIZE + 13 };
+    if (expirationSeconds !== undefined) request.expirationSeconds = expirationSeconds;
+    const response = await api(env, '/api/multipart/init', 'POST', request);
+    assert.equal(response.status, 200);
+    const session = await response.json();
+    const parts = await sendParts(env, session);
+    const completion = await api(env, '/api/multipart/complete', 'POST', {
+      sessionId: session.sessionId, parts
+    });
+    const { url } = await completion.json();
+    return files.get(decodeURIComponent(new URL(url).pathname.slice(1))).customMetadata;
+  };
+  const defaultMetadata = await makeSession(undefined);
+  assert.equal(defaultMetadata.oneTime, 'true');
+  assert.equal(defaultMetadata.expirationSeconds, undefined);
+  const overridden = await makeSession(600);
+  assert.equal(overridden.oneTime, 'false');
+  assert.equal(overridden.expirationSeconds, '600');
+});
+
+test('multipart rejects combining one-time and explicit expiration', async () => {
+  const { env } = environment();
+  const response = await api(env, '/api/multipart/init', 'POST', {
+    name: FILE_NAME, size: PART_SIZE + 13, oneTime: true, expirationSeconds: 7200,
+  });
+  assert.equal(response.status, 400);
 });
