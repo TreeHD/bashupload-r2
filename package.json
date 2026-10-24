@@ -1,5 +1,9 @@
 {
   "dependencies": {
     "mime": "^4.0.7"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
   }
 }
