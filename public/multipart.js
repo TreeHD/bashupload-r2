@@ -90,7 +90,7 @@ function multipartUploadPart(file, sessionId, partSize, partNumber, job, onProgr
 }
 
 async function uploadMultipartFile(file) {
-    const job = { cancelled: false, requests: new Set() };
+    const job = { cancelled: false, userCancelled: false, requests: new Set() };
     activeMultipartUpload = job;
     const cancelButton = document.getElementById('cancelMultipartUpload');
     if (cancelButton) {
@@ -98,6 +98,7 @@ async function uploadMultipartFile(file) {
         cancelButton.disabled = false;
         cancelButton.onclick = () => {
             job.cancelled = true;
+            job.userCancelled = true;
             cancelButton.disabled = true;
             for (const xhr of job.requests) xhr.abort();
         };
@@ -213,11 +214,11 @@ async function uploadMultipartFile(file) {
         addFileToList(file.name, result.url, usePassword);
         uploadedFiles.push({ name: file.name, url: result.url, passwordProtected: usePassword });
     } catch (error) {
-        const cancelled = job.cancelled;
+        const cancelled = job.userCancelled;
         showStatus(cancelled
             ? localized('Upload cancelled.', '已取消上傳。', '已取消上傳。')
             : localized('Upload failed: ', '上傳失敗：', '上傳失敗：') + error.message,
-        cancelled ? 'error' : 'error');
+        'error');
         if (sessionId && !completed) {
             try {
                 await multipartApi('/api/multipart/abort', 'DELETE', { sessionId });
