@@ -1,4 +1,4 @@
-name = "bashupload"
+name = "bashupload-r2"
 main = "src/index.js"
 compatibility_date = "2025-08-16"
 
@@ -7,7 +7,7 @@ workers_dev = true
 
 # 绑定域名
 routes = [
-	{ pattern = "bashupload.app", custom_domain = true }
+	{ pattern = "upload.treexhd.me", custom_domain = true }
 ]
 
 # R2 存储桶绑定
