@@ -154,7 +154,8 @@ export default {
   curl -H "X-Expiration-Seconds: 3600" bashupload.app -T file.txt   # 设置有效期 / Set expiration time
 
 特性 Features:
-  • 文件只能下载一次 / Files can only be downloaded once (默认 default)
+  • 默认按 DEFAULT_EXPIRATION_SECONDS 保留并可重复下载 / Reusable until the default expiration
+  • 如需一次性下载，请设置 X-One-Time-Download: true / Optional one-time download
   • 可以设置有效期 / Can set expiration time for multiple downloads
   • 下载后自动删除 / Auto-delete after download or expiration
   • 保护隐私安全 / Privacy protection
