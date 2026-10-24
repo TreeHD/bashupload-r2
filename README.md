@@ -88,6 +88,22 @@ Click the "Deploy to Cloudflare" button above to modify the configuration.
 
 The final step of deployment may show a deployment failure error because the default configuration uses `bashupload.app` as the domain. In fact, the project has already been deployed successfully. You just need to bind your own domain in the Worker project settings.
 
+
+### Large files in the browser (90 MiB multipart chunks)
+
+The browser automatically switches to Cloudflare R2 multipart upload when a file is **larger than 90 MiB (94,371,840 bytes)**. It splits the file with `File.slice()`, uploads up to three parts concurrently, retries failed parts up to three times, and offers a **Cancel upload** button. R2 assembles the uploaded parts into **one object**, at the same normal download URL; one-time downloads, custom expiry and optional short URLs are preserved.
+
+Each request remains below Cloudflare's 100 MB Free/Pro request body limit. The **whole-file limit** still comes from `MAX_UPLOAD_SIZE` (default **5 GiB**). Increase it in your Worker configuration if you need bigger files, taking R2 storage costs and your public service's abuse exposure into account. No special client-side library or additional service is required.
+
+Multipart API endpoints (same-origin, and the existing `PASSWORD` if configured):
+
+- `POST /api/multipart/init`
+- `PUT /api/multipart/part?sessionId=...&partNumber=...`
+- `POST /api/multipart/complete`
+- `DELETE /api/multipart/abort`
+
+The server stores an opaque, unguessable session in R2 and validates each part's exact byte count before forwarding it as a stream. A successful completion deletes the session. Abandoned sessions are cleaned up by the existing cron after **24 hours** (when `NO_CLEANUP` is disabled); R2 independently expires incomplete multipart uploads after seven days. Refreshing the page currently restarts the upload rather than resuming it. For best results, keep the page open while uploading.
+
 ## Advanced Features
 
 ### Custom Expiration Time
