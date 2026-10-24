@@ -26,3 +26,11 @@ test('Worker routes front-end assets including icon', () => {
   }
   assert.match(icon, /<svg /);
 });
+
+
+test('favicon.ico redirects to the SVG asset rather than returning 404', async () => {
+  const { default: worker } = await import('../src/index.js');
+  const response = await worker.fetch(new Request('https://files.example/favicon.ico'), {}, { waitUntil() {} });
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get('location'), 'https://files.example/favicon.svg');
+});
