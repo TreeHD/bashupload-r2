@@ -49,6 +49,17 @@ echo "alias bashuploadexpire='curl -H \"X-Expiration-Seconds: 3600\" bashupload.
 source ~/.bashrc
 ```
 
+
+### 瀏覽器大檔上傳（90 MiB 分段）
+
+網頁上傳超過 **90 MiB（94,371,840 bytes）** 的檔案時，會自動切換為 Cloudflare R2 Multipart Upload。前端使用 `File.slice()` 分段、最多三段並行、失敗分段最多重試三次，並提供「取消上傳」按鈕。最後 R2 會合併成**一個完整物件**，維持原本的下載連結格式、一次性下載、到期自動刪除與可選短網址。
+
+每個分段請求低於 Cloudflare Free / Pro 的 **100 MB** 上限；但**整個檔案**仍會受到 `MAX_UPLOAD_SIZE` 限制，預設 **5 GiB**。若要上傳更大的檔案，請調整 Worker 的設定，並留意公開上傳服務的儲存費用及濫用風險。
+
+Worker 新增同網域的 Multipart API：`POST /api/multipart/init`、`PUT /api/multipart/part`、`POST /api/multipart/complete`、`DELETE /api/multipart/abort`。如有設定 `PASSWORD`，以上 API 也會要求密碼。Worker 透過 R2 存放不可猜測的上傳工作階段、檢查每段的位元組數，並以串流方式送到 R2，不會在 Worker 記憶體中合併整個檔案。
+
+未完成的工作階段在 **24 小時**後由現有定時清理程序中止（`NO_CLEANUP=false`）；R2 本身也會在七天後中止未完成的 multipart upload。**目前重新整理頁面後需重新上傳**，還不支援跨頁面恢復。
+
 ## 浏览器上传
 
 网页界面支持**英语、简体中文（zh-CN）和繁体中文（zh-TW）**，会自动识别浏览器语言；也可以手动切换并记住您的选择。

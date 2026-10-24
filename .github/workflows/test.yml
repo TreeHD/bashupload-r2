@@ -16,3 +16,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: node --check public/upload.js
+      - run: node --check src/multipart.js

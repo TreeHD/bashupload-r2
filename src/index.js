@@ -1,5 +1,6 @@
 import mime from 'mime';
 import { decodeObjectKey, encodeObjectKey } from './url-path.js';
+import { handleMultipart, MULTIPART_PART_SIZE, MULTIPART_SESSION_PREFIX, resolveExpirationTime, cleanupMultipartSession } from './multipart.js';
 
 export default {
   // 处理定时任务
@@ -42,12 +43,16 @@ export default {
 
               if (fileInfo) {
                 // 检查文件是否有自定义的过期时间
-                const expirationTime = fileInfo.customMetadata?.expirationTime;
+                const expirationTime = resolveExpirationTime(fileInfo);
                 if (expirationTime) {
                   const now = new Date().getTime();
                   const expireAt = new Date(expirationTime).getTime();
                   if (now > expireAt) {
-                    await env.R2_BUCKET.delete(object.key);
+                    if (object.key.startsWith(MULTIPART_SESSION_PREFIX)) {
+                      await cleanupMultipartSession(env, object.key);
+                    } else {
+                      await env.R2_BUCKET.delete(object.key);
+                    }
                     console.log(`[Scheduled Task] Deleted expired file: ${object.key}, expiration: ${expirationTime}`);
                     return true;
                   }
@@ -100,6 +105,10 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
+    if (pathname.startsWith('/api/multipart/')) {
+      return handleMultipart(request, env);
+    }
+
     // 处理 GET 请求
     if (request.method === 'GET') {
       // 获取服务端配置信息的API端点
@@ -107,6 +116,7 @@ export default {
         const config = {
           maxAgeForMultiDownload: parseInt(env.MAX_AGE_FOR_MULTIDOWNLOAD || '86400', 10),
           maxUploadSize: parseInt(env.MAX_UPLOAD_SIZE || '5368709120', 10),
+          multipartPartSize: MULTIPART_PART_SIZE,
           maxAge: parseInt(env.MAX_AGE || '3600', 10),
           needPassword: Boolean(env.PASSWORD)
         };
@@ -161,7 +171,11 @@ export default {
         return new Response('Invalid file URL\n', { status: 400 });
       }
 
-      if (fileName === 'index.html' || fileName === 'style.css' || fileName === 'upload.js') {
+      if (fileName.startsWith(MULTIPART_SESSION_PREFIX)) {
+        return new Response('File not found\n', { status: 404 });
+      }
+
+      if (fileName === 'index.html' || fileName === 'style.css' || fileName === 'upload.js' || fileName === 'favicon.svg') {
         try {
           const assetResponse = await env.ASSETS.fetch(`https://assets.local/${fileName}`);
           if (assetResponse.status === 200) {
@@ -220,7 +234,7 @@ export default {
           // 检查文件元数据，确定是否是有效期模式
           const fileInfo = await env.R2_BUCKET.head(fileName);
           const isOneTime = !fileInfo?.customMetadata?.oneTime || fileInfo.customMetadata.oneTime === 'true';
-          const expirationTime = fileInfo?.customMetadata?.expirationTime;
+          const expirationTime = resolveExpirationTime(fileInfo);
 
           // 如果有过期时间，检查是否已经过期
           if (expirationTime) {
