@@ -175,7 +175,7 @@ export default {
         return new Response('File not found\n', { status: 404 });
       }
 
-      if (fileName === 'index.html' || fileName === 'style.css' || fileName === 'upload.js' || fileName === 'multipart.js') {
+      if (fileName === 'index.html' || fileName === 'style.css' || fileName === 'upload.js' || fileName === 'favicon.svg') {
         try {
           const assetResponse = await env.ASSETS.fetch(`https://assets.local/${fileName}`);
           if (assetResponse.status === 200) {
