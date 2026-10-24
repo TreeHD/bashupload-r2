@@ -32,6 +32,14 @@ function formatBytes(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + sizes[i];
 }
 
+// Use the exact origin serving this page, including https and any non-default port.
+function updateQuickStartCommands() {
+    const fileCommand = document.getElementById('quickStartFileCommand');
+    const textCommand = document.getElementById('quickStartTextCommand');
+    if (fileCommand) fileCommand.textContent = `$ curl "${UPLOAD_URL}" -T file.txt`;
+    if (textCommand) textCommand.textContent = `$ curl "${UPLOAD_URL}" -d "your text content"`;
+}
+
 // Fetch server configuration
 async function fetchServerConfig() {
     try {
@@ -512,6 +520,7 @@ function uploadTextWithProgress(text, onProgress) {
 document.addEventListener('DOMContentLoaded', function() {
     currentLang = detectLanguage();
     switchLanguage(currentLang);
+    updateQuickStartCommands();
     
     // Fetch server configuration
     fetchServerConfig();
