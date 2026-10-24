@@ -102,6 +102,7 @@ function environment() {
 async function api(env, path, method, payload, password, opts = {}) {
   const headers = password ? { Authorization: password } : {};
   if (method !== 'PUT') headers['Content-Type'] = 'application/json';
+  if (method === 'PUT') headers['Content-Length'] = String(payload.byteLength);
   const body = method === 'PUT' ? payload : JSON.stringify(payload);
   return handleMultipart(
     new Request('https://upload.example' + path, { method, headers, body }),
@@ -187,7 +188,7 @@ test('wrong-size chunks, invalid session, incorrect part lists are rejected', as
 
   const wrong = await api(env, '/api/multipart/part?sessionId=' + session.sessionId + '&partNumber=1',
     'PUT', new Uint8Array(18));
-  assert.equal(wrong.status, 400);
+  assert.equal(wrong.status, 413);
 
   const missing = await api(env, '/api/multipart/part?sessionId=bad&partNumber=1',
     'PUT', new Uint8Array(13));
@@ -247,4 +248,54 @@ test('cross-origin multipart upload is refused', async () => {
     body: JSON.stringify({ name: 'test', size: PART_SIZE + 1 }),
   }), env, { partSize: PART_SIZE });
   assert.equal(response.status, 403);
+});
+
+test('uploadPart receives the untouched, fixed-length incoming request stream', async () => {
+  const { env } = environment();
+  const session = await init(env);
+  const partBody = new Uint8Array(13);
+  const request = new Request(
+    'https://upload.example/api/multipart/part?sessionId=' + session.sessionId + '&partNumber=2',
+    { method: 'PUT', headers: { 'Content-Length': '13' }, body: partBody },
+  );
+  const incomingStream = request.body;
+  const originalResume = env.R2_BUCKET.resumeMultipartUpload.bind(env.R2_BUCKET);
+  let inspected = false;
+  env.R2_BUCKET.resumeMultipartUpload = (key, id) => {
+    const upload = originalResume(key, id);
+    const originalPart = upload.uploadPart;
+    upload.uploadPart = async (partNumber, body) => {
+      assert.strictEqual(body, incomingStream, 'Worker must not wrap the original request.body');
+      inspected = true;
+      return originalPart(partNumber, body);
+    };
+    return upload;
+  };
+  const response = await handleMultipart(request, env, { partSize: PART_SIZE });
+  assert.equal(response.status, 200);
+  assert.ok(inspected);
+});
+
+test('multipart part requires explicit byte length so it cannot bypass chunk limits', async () => {
+  const { env } = environment();
+  const session = await init(env);
+  const response = await handleMultipart(new Request(
+    'https://upload.example/api/multipart/part?sessionId=' + session.sessionId + '&partNumber=2',
+    { method: 'PUT', body: new Uint8Array(13) },
+  ), env, { partSize: PART_SIZE });
+  assert.equal(response.status, 411);
+  assert.match((await response.json()).error, /Content-Length/);
+});
+
+test('R2 errors are returned with failing chunk number rather than generic HTTP 400', async () => {
+  const { env } = environment();
+  const session = await init(env);
+  env.R2_BUCKET.resumeMultipartUpload = () => ({
+    async uploadPart() { throw new Error('Fake R2 failure (10013)'); },
+  });
+  const response = await api(env,
+    '/api/multipart/part?sessionId=' + session.sessionId + '&partNumber=2',
+    'PUT', new Uint8Array(13));
+  assert.equal(response.status, 400);
+  assert.match((await response.json()).error, /Chunk 2: Fake R2 failure \\(10013\\)/);
 });
