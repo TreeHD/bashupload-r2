@@ -118,7 +118,7 @@ export async function handleMultipart(request, env, options = {}) {
       const contentType = typeof body.type === 'string' && body.type.length <= 255 && !/[\r\n]/.test(body.type)
         ? body.type || 'application/octet-stream' : 'application/octet-stream';
       const id = crypto.randomUUID();
-      const key = id.slice(0, 6) + '/' + name;
+      const key = id.replace(/-/g, '').slice(0, 12) + '/' + name;
       const metadata = {
         oneTime: expirationSeconds === null ? 'true' : 'false'
       };
