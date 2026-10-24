@@ -109,6 +109,11 @@ export default {
       return handleMultipart(request, env);
     }
 
+    // Browsers may request favicon.ico even when the HTML declares an SVG icon.
+    if (request.method === 'GET' && pathname === '/favicon.ico') {
+      return Response.redirect(url.origin + '/favicon.svg', 302);
+    }
+
     // 处理 GET 请求
     if (request.method === 'GET') {
       // 获取服务端配置信息的API端点
