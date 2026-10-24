@@ -758,8 +758,12 @@ async function uploadFile(file) {
         return;
     }
     
-    // Always use simple upload - our Worker handles everything
-    uploadSimpleFile(file);
+    // Files over 90 MiB use streamed R2 multipart upload; smaller files keep the original PUT path.
+    if (file.size > (serverConfig?.multipartPartSize || 90 * 1024 * 1024)) {
+        queueMultipartFile(file);
+    } else {
+        uploadSimpleFile(file);
+    }
 }
 
 function addFileToList(fileName, url, usePassword = false) {
@@ -819,7 +823,14 @@ function addFileToList(fileName, url, usePassword = false) {
     
     const fileUrl = document.createElement('span');
     fileUrl.className = 'file-url';
-    fileUrl.innerHTML = `<strong>${fileName}:</strong> <a href="${url}" target="_blank">${url}</a>`;
+    const nameLabel = document.createElement('strong');
+    nameLabel.textContent = fileName + ': ';
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.target = '_blank';
+    downloadLink.rel = 'noopener noreferrer';
+    downloadLink.textContent = url;
+    fileUrl.append(nameLabel, downloadLink);
     
     const copyButton = document.createElement('button');
     copyButton.className = 'copy-button';
