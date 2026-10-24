@@ -33,7 +33,7 @@
         </div>
         <p class="star-message lang-text" data-en="If you find this useful, please give my project a ⭐ Star on GitHub!" data-zh="如果觉得好用的话，欢迎给我的项目点个 ⭐ Star！" data-zh-tw="如果覺得好用，歡迎到 GitHub 幫這個專案點個 ⭐ Star！">If you find this useful, please give my project a ⭐ Star on GitHub!</p>
         <p style="color: #ff6b35; font-weight: bold; margin-top: 10px;">
-            <span class="lang-text" data-en="⚠️ Files can only be downloaded once, unless an expiration time is set" data-zh="⚠️ 文件只能下载一次，除非设置了有效期" data-zh-tw="⚠️ 檔案只能下載一次，除非設定了有效期限">⚠️ Files can only be downloaded once, unless an expiration time is set</span>
+            <span class="lang-text" data-en="🕐 Files can be downloaded repeatedly until their expiration time. One-time download is optional." data-zh="🕐 默认有效期内可重复下载，也可选择一次性下载。" data-zh-tw="🕐 預設在有效期限內可重複下載，也可選擇一次性下載。">🕐 Files can be downloaded repeatedly until their expiration time. One-time download is optional.</span>
         </p>
         
         <div class="section">
@@ -105,8 +105,15 @@
                 </div>
                 <div class="upload-options" style="margin-top: 15px;">
                     <label class="checkbox-label">
+                        <input type="checkbox" id="oneTimeDownload" class="checkbox-input">
+                        <span class="lang-text" data-en="One-time download (delete after first download)" data-zh="仅限下载一次（下载后删除）" data-zh-tw="僅能下載一次（下載後刪除）">One-time download (delete after first download)</span>
+                    </label>
+                </div>
+                <div id="defaultRetentionInfo" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+                <div class="upload-options" style="margin-top: 15px;">
+                    <label class="checkbox-label">
                         <input type="checkbox" id="useExpiration" class="checkbox-input">
-                        <span class="lang-text" data-en="Set expiration time" data-zh="设置有效期" data-zh-tw="設定有效期限">Set expiration time</span>
+                        <span class="lang-text" data-en="Override default expiration time" data-zh="自定义有效期" data-zh-tw="自訂有效期限">Override default expiration time</span>
                         <span class="tooltip-icon">ℹ️</span>
                         <span class="tooltip-text lang-text" 
                               data-en="File will be available for multiple downloads until expiration time" 
@@ -162,7 +169,7 @@
             <h2 class="lang-text" data-en="Features" data-zh="特征" data-zh-tw="功能特色">Features</h2>
             <div class="features">
                 <div class="feature" style="color: #ff6b35; font-weight: bold;">
-                    <span class="lang-text" data-en="🔐 One-time download: Files are deleted after first access (unless expiration is set)" data-zh="🔐 一次性下载：文件在首次访问后删除（除非设置了有效期）" data-zh-tw="🔐 一次性下載：首次下載後即刪除檔案（除非設定了有效期限）">🔐 One-time download: Files are deleted after first access (unless expiration is set)</span>
+                    <span class="lang-text" data-en="🔐 Optional one-time download: Files are removed after the first access" data-zh="🔐 可选择一次性下载：首次下载后删除文件" data-zh-tw="🔐 可選擇一次性下載：首次下載後刪除檔案">🔐 Optional one-time download: Files are removed after the first access</span>
                 </div>
                 <div class="feature" style="color: #ff6b35; font-weight: bold;">
                     <span class="lang-text" data-en="🛡️ Maximum privacy: Files automatically deleted after expiration" data-zh="🛡️ 最大隐私保护：文件在有效期后自动删除" data-zh-tw="🛡️ 隱私保護：檔案會在有效期限結束後自動刪除">🛡️ Maximum privacy: Files automatically deleted after expiration</span>
@@ -196,7 +203,7 @@
 
         <div class="note" style="background-color: #fff3cd; border-color: #ff6b35;">
             <strong class="lang-text" data-en="⚠️ Download Notice:" data-zh="⚠️ 下载注意：" data-zh-tw="⚠️ 下載須知：">⚠️ Download Notice:</strong>
-            <span class="lang-text" data-en="By default, files can only be downloaded ONCE. After the first download, the file is automatically and permanently deleted from our servers. If you set an expiration time, the file can be downloaded multiple times until it expires. This ensures maximum privacy and security for your shared files." data-zh="默认情况下，文件只能下载一次。首次下载后，文件将自动并永久地从我们的服务器删除。如果您设置了有效期，文件可以在有效期内多次下载。这确保了您共享文件的最大隐私和安全性。" data-zh-tw="預設每個檔案只能下載一次。首次下載後，檔案就會從伺服器永久刪除。如果設定了有效期限，則可在到期前重複下載，以保護分享檔案的隱私及安全性。">By default, files can only be downloaded ONCE. After the first download, the file is automatically and permanently deleted from our servers. If you set an expiration time, the file can be downloaded multiple times until it expires. This ensures maximum privacy and security for your shared files.</span>
+            <span class="lang-text" data-en="By default, files are available for repeated downloads until the server-configured expiration. To delete after the first access, enable One-time download." data-zh="默认可在服务器设定的有效期内重复下载。如需首次下载后删除，请勾选仅限下载一次。" data-zh-tw="預設可在伺服器設定的有效期限內重複下載。如需首次下載後刪除，請勾選僅能下載一次。">By default, files are available for repeated downloads until the server-configured expiration. To delete after the first access, enable One-time download.</span>
         </div>
     </div>
 
