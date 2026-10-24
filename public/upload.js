@@ -1082,8 +1082,23 @@ function multipartUploadPart(file, sessionId, partSize, partNumber, job, onProgr
         });
         xhr.addEventListener('load', () => {
             if (xhr.status < 200 || xhr.status >= 300) {
-                const error = new Error('Chunk ' + partNumber + ' failed (HTTP ' + xhr.status + ')');
+                let details = '';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (typeof response.error === 'string') details = response.error;
+                } catch {
+                    // Cloudflare may reject a request before it reaches our Worker.
+                    // Avoid placing HTML error pages into the upload status UI.
+                    if (xhr.responseText && !/^\\s*</.test(xhr.responseText)) {
+                        details = xhr.responseText.trim().slice(0, 250);
+                    }
+                }
+                const error = new Error(
+                    'Chunk ' + partNumber + ' failed (HTTP ' + xhr.status + ')' +
+                    (details ? ': ' + details : '')
+                );
                 error.status = xhr.status;
+                console.error('[Multipart upload]', error.message);
                 finish(error);
                 return;
             }
