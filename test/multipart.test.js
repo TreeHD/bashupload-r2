@@ -297,5 +297,5 @@ test('R2 errors are returned with failing chunk number rather than generic HTTP 
     '/api/multipart/part?sessionId=' + session.sessionId + '&partNumber=2',
     'PUT', new Uint8Array(13));
   assert.equal(response.status, 400);
-  assert.match((await response.json()).error, /Chunk 2: Fake R2 failure \\(10013\\)/);
+  assert.ok((await response.json()).error.includes('Chunk 2: Fake R2 failure (10013)'));
 });
