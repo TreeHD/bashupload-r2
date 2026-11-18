@@ -1,4 +1,5 @@
 import mime from 'mime';
+import { maybeServeDownloadPage, attachmentDisposition } from './download-page.js';
 import { getDefaultExpirationSeconds, getMaximumExpirationSeconds, resolveUploadExpiration } from './expiration.js';
 import { decodeObjectKey, encodeObjectKey } from './url-path.js';
 import { handleMultipart, MULTIPART_PART_SIZE, MULTIPART_SESSION_PREFIX, resolveExpirationTime, cleanupMultipartSession } from './multipart.js';
@@ -228,6 +229,8 @@ export default {
         try {
           const object = await env.R2_BUCKET.get(fileName);
           if (!object) {
+            const landingPage = await maybeServeDownloadPage(env, fileName);
+            if (landingPage) return landingPage;
             return new Response('File not found\n', { status: 404 });
           }
 
@@ -238,6 +241,9 @@ export default {
           // 使用 mime.js 根据文件名获取 Content-Type
           const contentType = mime.getType(fileName) || 'application/octet-stream';
           headers.set('Content-Type', contentType);
+          if (url.searchParams.get('download') === '1') {
+            headers.set('Content-Disposition', attachmentDisposition(fileName));
+          }
 
           // 检查文件元数据，确定是否是有效期模式
           const fileInfo = await env.R2_BUCKET.head(fileName);

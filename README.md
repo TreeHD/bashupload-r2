@@ -49,6 +49,12 @@ echo "alias bashuploadexpire='curl -H \"X-Expiration-Seconds: 3600\" bashupload.
 source ~/.bashrc
 ```
 
+### Download page using the upload ID
+
+An upload URL such as `https://your-domain/abc123/report.txt` can also be opened as `https://your-domain/abc123`. The shorter URL displays a file information page and a Download button. The button downloads the original filename; the full file URL keeps its previous behavior. Simply opening the page does not consume a one-time download, and the same `PASSWORD` authorization applies.
+
+This also works for the 12-character IDs used by multipart uploads. Expired or deleted files return 404. No separate URL shortener or database is required.
+
 ## Browser Upload
 
 The web interface supports **English**, **Simplified Chinese (zh-CN)** and **Traditional Chinese (zh-TW)**. It automatically detects the browser language, and a language selector lets you override it. Your choice is remembered in the browser.
